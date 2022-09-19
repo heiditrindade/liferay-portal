@@ -1,0 +1,57 @@
+//Criar Form
+//Adicionar um campo de texto (Text) e um campo numerico (Numeric)
+//Traduzir os titulos dos campos para Ingles e Portugues
+//Ingles -> Texto: Full Name; Numerico: Age / Portugues -> Texto: Nome Completo; Numerico: Idade
+//Publicar Form
+//Navegar ateh o Form publicado e validar as traducoes dos titulos ao mudar o idioma do formulario na pagina
+//Enviar o Form duas vezes, 1x em cada idioma e validar as traducoes das mensagens de sucesso
+// Ir para Content & Data > Forms > clique nos 3 pontos ao lado do nome do Form > View Entries > e valide o conteúdo enviado
+
+@component-name = "portal-web-forms-and-data-lists"
+definition {
+    property testray.main.component.name = "Forms";
+
+    setUp {
+        TestCase.setUpPortalInstance();
+
+        User.firstLoginPG();
+
+        Navigator.openURL();
+    }
+
+    tearDown {
+        User.logoutAndLoginPG(
+            userLoginEmailAddress = "test@liferay.com",
+            userLoginFullName = "Test Test");
+    }
+
+    @description = "A"
+    @priority = "5"
+    test CanBeCreated {
+        task("Create Form") {
+            FormsAdmin.addForm();
+        }
+        task("Add Text and Numeric Fields") {
+            Form.addTextField();
+            Form.editFieldLabelMetal(fieldValue = "Full Name");
+            Click(locator1 = "//*[@class='mr-3 btn btn-secondary']");
+            Form.gotoAddField(fieldType = "Numeric", fieldPositionNumber = "1");
+            Form.editFieldLabelMetal(fieldValue = "Age");
+        }
+        task("Translate Fields") {
+            Form.addTranslation(localizedLanguage="Portuguese (Brazil)");
+            FormViewBuilder.editFieldLabel(fieldLabel = "Age",
+            label = "Idade");
+            FormViewBuilder.editFieldLabel(fieldLabel = "Full Name",
+            label = "Nome Completo");
+        }
+        task("Save and Publish") {
+            Form.save();
+            Form.publishForm();
+        }
+
+//        task("") {
+//            MyMacros.assertConfigurationString();
+//        }
+    }
+}

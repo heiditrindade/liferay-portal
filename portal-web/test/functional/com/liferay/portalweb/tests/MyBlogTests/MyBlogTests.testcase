@@ -4,15 +4,17 @@ definition {
 	property testray.main.component.name = "Blogs";
 
 	setUp {
-		task("Set up instance and login") {
+		task ("Set up instance and login") {
 			TestCase.setUpPortalInstance();
-		
+
 			User.firstLoginPG();
 		}
-			JSONLayout.addPublicLayout(
-				groupName = "Guest",
-				layoutName = "Blogs Page");
-		task("Add a blog entry") {
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Blogs Page");
+
+		task ("Add a blog entry") {
 			JSONLayout.addWidgetToPublicLayout(
 				column = "1",
 				groupName = "Guest",
@@ -48,29 +50,30 @@ definition {
 		}
 	}
 
-    @description = "Can Search Blogs"
-    @priority = "5"
-    test CanSearchBlogs {
-        task ("Add blogs entry") {
-            JSONBlog.addEntry(
-                entryContent = "Blogs Entry Content 2",
-                entryTitle = "Blogs Entry Title 2");
-        }
-        task("Search for blogs entry") {
-            Navigator.openURL();
+	@description = "Can Search Blogs"
+	@priority = "5"
+	test CanSearchBlogs {
+		task ("Add blogs entry") {
+			JSONBlog.addEntry(
+				entryContent = "Blogs Entry Content 2",
+				entryTitle = "Blogs Entry Title 2");
+		}
 
-            SearchPortlets.searchEmbedded(searchTerm = ""Blogs Entry Title 1"");
-        }
-        task("Assert searched title") {
-            SearchResultPortlet.viewSearchResults(
-                searchAssetTitle = "Blogs Entry Title 1",
-                searchAssetType = "Blogs Entry");
+		task ("Search for blogs entry") {
+			Navigator.openURL();
+
+			SearchPortlets.searchEmbedded(searchTerm = "&quot;Blogs Entry Title 1&quot;");
+		}
+
+		task ("Assert searched title") {
+			SearchResultPortlet.viewSearchResults(
+				searchAssetTitle = "Blogs Entry Title 1",
+				searchAssetType = "Blogs Entry");
 
 			SearchResultPortlet.viewSearchResultNotPresent(
 				searchAssetTitle = "Blogs Entry Title 2",
 				searchAssetType = "Blogs Entry");
-        }
-    }
-
+		}
+	}
 
 }

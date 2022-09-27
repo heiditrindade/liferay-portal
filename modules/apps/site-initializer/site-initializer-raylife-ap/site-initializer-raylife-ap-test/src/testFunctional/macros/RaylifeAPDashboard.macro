@@ -9,5 +9,21 @@ definition {
             value1 = "${timeFilter}");
 	}
 
+    macro getCommissionEventValue {
+        if (!(isSet(eventIndex))) {
+            var eventIndex = "0";
+        }
+
+        MouseOver(
+			locator1 = "RaylifeAPDashboard#COMMISSION_EVENT",
+			key_index = "${eventIndex}");
+
+		var commissionValue = selenium.getText("RaylifeAPDashboard#COMMISSION_EVENT_TEXT");
+
+		var commissionValue = StringUtil.extractLast("${commissionValue}", "$");
+
+        return "${commissionValue}";
+	}
+
 
 }

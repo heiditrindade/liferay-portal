@@ -4,25 +4,29 @@ definition {
 	property testray.main.component.name = "Blogs";
 
 	setUp {
-		TestCase.setUpPortalInstance();
+		task ("Log in Liferay Portal") {
+			TestCase.setUpPortalInstance();
 
-		User.firstLoginPG();
+			User.firstLoginPG();
+		}
 
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Blogs Page");
+		task ("Create a new page, a blog widget and a blog entry via API") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Blogs Page");
 
-		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
-			groupName = "Guest",
-			layoutName = "Blogs Page",
-			widgetName = "Blogs");
+			JSONLayout.addWidgetToPublicLayout(
+				column = "1",
+				groupName = "Guest",
+				layoutName = "Blogs Page",
+				widgetName = "Blogs");
 
-		Navigator.gotoPage(pageName = "Blogs Page");
+			Navigator.gotoPage(pageName = "Blogs Page");
 
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title");
+			JSONBlog.addEntry(
+				entryContent = "Blogs Entry Content",
+				entryTitle = "Blogs Entry Title");
+		}
 	}
 
 	tearDown {
@@ -46,38 +50,30 @@ definition {
 		}
 	}
 
-	@description = "Can Create a Blog"
-	@priority = "5"
-	test CanCreateBlog {
-		Blogs.addEntry(
-			entryContent = "UI Blogs Entry Content",
-			entryTitle = "UI Blogs Entry Title");
-
-		BlogsEntry.viewPG(
-			entryContent = "UI Blogs Entry Content",
-			entryTitle = "UI Blogs Entry Title");
-	}
-
 	@description = "Can Edit a Blog"
 	@priority = "5"
 	test CanEditBlog {
-		Navigator.gotoPage(pageName = "Blogs Page");
+		task ("Edit title and content") {
+			Navigator.gotoPage(pageName = "Blogs Page");
 
-		BlogsNavigator.gotoEditPG(entryTitle = "Blogs Entry Title");
+			BlogsNavigator.gotoEditPG(entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.editTitle(
-			entryTitle = "Blogs Entry Title",
-			entryTitleEdit = "Blogs Entry Title Edit");
+			BlogsEntry.editTitle(
+				entryTitle = "Blogs Entry Title",
+				entryTitleEdit = "Blogs Entry Title Edit");
 
-		BlogsEntry.editContent(
-			entryContent = "Blogs Entry Content",
-			entryContentEdit = "Blogs Entry Content Edit");
+			BlogsEntry.editContent(
+				entryContent = "Blogs Entry Content",
+				entryContentEdit = "Blogs Entry Content Edit");
 
-		PortletEntry.publish();
+			PortletEntry.publish();
+		}
 
-		BlogsEntry.viewPG(
-			entryContent = "Blogs Entry Content Edit",
-			entryTitle = "Blogs Entry Title Edit");
+		task ("Assert changes in title and content") {
+			BlogsEntry.viewPG(
+				entryContent = "Blogs Entry Content Edit",
+				entryTitle = "Blogs Entry Title Edit");
+		}
 	}
 
 }

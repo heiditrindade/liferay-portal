@@ -51,4 +51,29 @@ definition {
 			expected = "${commission2}");
 	}
 
+	@description = "LPS-162868 - Check that when you make a quotation, a MoM or YoY icon appears in red or green (example of a decrease and increase) in commission"
+	@priority = "4"
+	test CanViewYoYAndMoMIcons {
+		task ("Go to Raylife AP Site") {
+			RaylifeAP.gotoRaylife();
+		}
+
+		AssertElementPresent(locator1 = "RaylifeAPDashboard#COMMISSION_GRAPH_DOWN");
+
+		AssertElementNotPresent(locator1 = "RaylifeAPDashboard#COMMISSION_GRAPH_UP");
+
+		RaylifeAPDashboard.addNewPolicyViaObject(commissionValue = "3000000");
+
+		RaylifeAP.gotoRaylife();
+
+		RaylifeAPDashboard.changeTimeFilter(
+			dashboardTitle = "Commission",
+			timeFilter = "6 MO");
+
+		AssertElementPresent(locator1 = "RaylifeAPDashboard#COMMISSION_GRAPH_UP");
+
+		AssertElementNotPresent(locator1 = "RaylifeAPDashboard#COMMISSION_GRAPH_DOWN");
+        
+	}
+
 }

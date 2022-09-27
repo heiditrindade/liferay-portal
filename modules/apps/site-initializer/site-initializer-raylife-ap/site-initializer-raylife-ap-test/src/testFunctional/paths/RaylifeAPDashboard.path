@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>RaylifeAPDashboard</title>
+</head>
+
+<body>
+<table border="1" cellpadding="1" cellspacing="1">
+<thead>
+<tr><td rowspan="1" colspan="3">RaylifeAPDashboard</td></tr>
+</thead>
+
+<tbody>
+
+<tr>
+	<td>COMMISSION_EVENT</td>
+	<td>//div[contains(@class,'dashboard-commission')]//*[contains(@class,'bb-event-rects')]//*[contains(@class,'event-rect-${key_index}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COMMISSION_EVENT_TEXT</td>
+	<td>//div[@class='bb-tooltip-container']//span[contains(text(),'Commission')]//parent::div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DASHBOARD_TIME_FILTER</td>
+	<td>//div[contains(@class,'dashboard-${key_dashboardTitle}')]//select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COMMISSION_GRAPH_UP</td>
+	<td>//div[contains(@class,'dashboard-commission')]//div[contains(@class,'icon-success')]/..//*[contains(.,'YoY')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COMMISSION_GRAPH_DOWN</td>
+	<td>//div[contains(@class,'dashboard-commission')]//div[contains(@class,'text-danger')]/..//*[contains(.,'MoM')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COMMISSION_CARD</td>
+	<td>//div[contains(@class,'dashboard-commission-title')]</td>
+	<td></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

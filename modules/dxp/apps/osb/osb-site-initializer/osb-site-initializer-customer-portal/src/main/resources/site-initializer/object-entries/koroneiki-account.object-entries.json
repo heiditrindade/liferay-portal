@@ -33,8 +33,14 @@
 			"partner": false,
 			"region": "Brazil",
 			"slaCurrent": "Platinum Subscription",
-			"slaCurrentEndDate": "2022-08-24 00:00:00.0",
-			"slaCurrentStartDate": "2021-08-24 00:00:00.0"
+			"slaCurrentEndDate": "2023-01-01 00:00:00.0",
+			"slaCurrentStartDate": "2022-01-01 00:00:00.0",
+			"slaExpired": "Platinum Subscription",
+			"slaExpiredEndDate": "2021-12-31 00:00:00.0",
+			"slaExpiredStartDate": "2020-12-31 00:00:00.0",
+			"slaFuture": "Platinum Subscription",
+			"slaFutureEndDate": "2024-01-02 00:00:00.0",
+			"slaFutureStartDate": "2023-01-02 00:00:00.0"
 		},
 		{
 			"accountKey": "ERC-003",
@@ -207,6 +213,17 @@
 			"slaCurrent": "Gold Subscription",
 			"slaCurrentEndDate": "2022-08-24 00:00:00.0",
 			"slaCurrentStartDate": "2021-08-24 00:00:00.0"
+		},
+		{
+			"accountKey": "ERC-014",
+			"code": "TESTACCOUNT14",
+			"dxpVersion": "7.4",
+			"liferayContactEmailAddress": "customer-service@liferay.com",
+			"liferayContactName": "Liferay Support",
+			"maxRequestors": -1,
+			"name": "Test Account No SLA",
+			"partner": false,
+			"region": "United States"
 		}
 	],
 	"objectDefinitionName": "KoroneikiAccount"

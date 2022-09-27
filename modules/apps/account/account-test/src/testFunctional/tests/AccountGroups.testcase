@@ -219,12 +219,6 @@ definition {
 			portlet = "Account Groups");
 
 		AccountGroups.addCP(
-			accountGroupDescription = "This is an Account Group to make search field works.",
-			accountGroupName = "Search AG");
-
-		Navigator.gotoBack();
-
-		AccountGroups.addCP(
 			accountGroupDescription = "This is an Account Group for delete testing.",
 			accountGroupName = "Delete AG");
 
@@ -575,6 +569,30 @@ definition {
 
 		for (var rowEntry : list "Delete Accounts 1 from AG,Delete Accounts 2 from AG,Delete Accounts 3 from AG") {
 			LexiconEntry.viewEntryName(rowEntry = "${rowEntry}");
+		}
+	}
+
+	@description = "This test asserts the correct search results when searching for Account Groups"
+	@priority = "4"
+	test CanSearchForAccountGroup {
+		task ("Given Account Groups exist") {
+			for (var accountGroupName : list "One,Two,Three") {
+				JSONAccountGroup.addAccountGroup(accountGroupName = "${accountGroupName}");
+			}
+		}
+
+		task ("When a user searches for an account group") {
+			AccountGroups.openAccountGroupsAdmin();
+
+			Search.searchCP(searchTerm = "Two");
+		}
+
+		task ("Then accurate results display") {
+			LexiconEntry.viewEntryName(rowEntry = "Two");
+
+			for (var accountName : list "One,Three") {
+				LexiconEntry.viewNoEntry(rowEntry = "${accountName}");
+			}
 		}
 	}
 

@@ -38,6 +38,7 @@ import com.liferay.info.item.provider.InfoItemObjectVariationProvider;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
 import com.liferay.info.item.provider.InfoItemWorkflowProvider;
 import com.liferay.info.item.provider.filter.InfoItemServiceFilter;
+import com.liferay.info.item.provider.filter.OptionalPropertyInfoItemServiceFilter;
 import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.info.item.selector.InfoItemSelector;
 import com.liferay.info.item.translator.InfoItemIdentifierTranslator;
@@ -51,6 +52,7 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFa
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerCustomizerFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
@@ -107,28 +109,22 @@ public class InfoItemServiceTrackerImpl implements InfoItemServiceTracker {
 			infoItemServiceTrackerMap.getService(itemClassName);
 
 		if (serviceReferenceServiceTuples != null) {
-			Stream<ServiceReferenceServiceTuple<P, P>> stream =
-				serviceReferenceServiceTuples.stream();
+			serviceReferenceServiceTuples =
+				_filterServiceReferenceServiceTuples(
+					new OptionalPropertyInfoItemServiceFilter(
+						"company.id",
+						String.valueOf(CompanyThreadLocal.getCompanyId())),
+					serviceReferenceServiceTuples);
 
 			if (infoItemServiceFilter != null) {
-				try {
-					Filter filter = FrameworkUtil.createFilter(
-						infoItemServiceFilter.getFilterString());
-
-					stream = stream.filter(
-						srst -> filter.match(srst.getServiceReference()));
-				}
-				catch (InvalidSyntaxException invalidSyntaxException) {
-					throw new RuntimeException(
-						"Incorrect filter string", invalidSyntaxException);
-				}
+				serviceReferenceServiceTuples =
+					_filterServiceReferenceServiceTuples(
+						infoItemServiceFilter, serviceReferenceServiceTuples);
 			}
 
-			return stream.map(
-				ServiceReferenceServiceTuple::getService
-			).collect(
-				Collectors.toList()
-			);
+			return ListUtil.toList(
+				serviceReferenceServiceTuples,
+				ServiceReferenceServiceTuple::getService);
 		}
 
 		return Collections.emptyList();
@@ -156,6 +152,10 @@ public class InfoItemServiceTrackerImpl implements InfoItemServiceTracker {
 		InfoItemCapabilitiesProvider<?> infoItemCapabilitiesProvider =
 			getFirstInfoItemService(
 				InfoItemCapabilitiesProvider.class, itemClassName, null);
+
+		if (infoItemCapabilitiesProvider == null) {
+			return null;
+		}
 
 		return infoItemCapabilitiesProvider.getInfoItemCapabilities();
 	}
@@ -201,6 +201,10 @@ public class InfoItemServiceTrackerImpl implements InfoItemServiceTracker {
 				getFirstInfoItemService(
 					InfoItemCapabilitiesProvider.class,
 					curInfoItemClassDetails.getClassName(), null);
+
+			if (infoItemCapabilitiesProvider == null) {
+				continue;
+			}
 
 			List<InfoItemCapability> infoItemCapabilities =
 				infoItemCapabilitiesProvider.getInfoItemCapabilities();
@@ -279,6 +283,26 @@ public class InfoItemServiceTrackerImpl implements InfoItemServiceTracker {
 				_keyedInfoItemServiceTrackerMap.values()) {
 
 			serviceTrackerMap.close();
+		}
+	}
+
+	private <P> List<ServiceReferenceServiceTuple<P, P>>
+		_filterServiceReferenceServiceTuples(
+			InfoItemServiceFilter infoItemServiceFilter,
+			List<ServiceReferenceServiceTuple<P, P>> serviceReferenceTuples) {
+
+		try {
+			Filter filter = FrameworkUtil.createFilter(
+				infoItemServiceFilter.getFilterString());
+
+			return ListUtil.filter(
+				serviceReferenceTuples,
+				serviceReferenceTuple -> filter.match(
+					serviceReferenceTuple.getServiceReference()));
+		}
+		catch (InvalidSyntaxException invalidSyntaxException) {
+			throw new RuntimeException(
+				"Invalid filter string", invalidSyntaxException);
 		}
 	}
 

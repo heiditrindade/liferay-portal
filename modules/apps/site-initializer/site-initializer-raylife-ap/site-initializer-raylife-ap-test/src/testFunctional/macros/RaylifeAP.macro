@@ -32,6 +32,12 @@ definition {
 			locator1 = "RaylifeAP#MENU_SIDEBAR");
 	}
 
+	macro gotoRaylife {
+		Navigator.openSiteURL(siteName = "Raylife AP");
+
+		WaitForVisible(locator1 = "RaylifeAPDashboard#COMMISSION_CARD");
+	}
+
 	macro mouseOverSidebar {
 		var key_menu = "${menu}";
 

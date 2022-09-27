@@ -1042,10 +1042,6 @@ public class ObjectEntryLocalServiceImpl
 			user.isDefaultUser(), objectEntry.getObjectDefinitionId(),
 			objectDefinition.getPortletId(), serviceContext, userId, values);
 
-		Map<String, Serializable> transientValues = objectEntry.getValues();
-
-		objectEntry.setTransientValues(transientValues);
-
 		_updateTable(
 			_getDynamicObjectDefinitionTable(
 				objectEntry.getObjectDefinitionId()),
@@ -1055,10 +1051,15 @@ public class ObjectEntryLocalServiceImpl
 				objectEntry.getObjectDefinitionId()),
 			objectEntryId, values);
 
+		objectEntry = objectEntryPersistence.findByPrimaryKey(objectEntryId);
+
 		_setExternalReferenceCode(objectEntry, values);
 
 		objectEntry.setModifiedDate(serviceContext.getModifiedDate(null));
-		objectEntry.setValues(null);
+
+		Map<String, Serializable> transientValues = objectEntry.getValues();
+
+		objectEntry.setTransientValues(transientValues);
 
 		objectEntry = objectEntryPersistence.update(objectEntry);
 
@@ -2122,7 +2123,11 @@ public class ObjectEntryLocalServiceImpl
 			dynamicObjectDefinitionTable.getObjectFields();
 
 		for (ObjectField objectField : objectFields) {
-			if (!values.containsKey(objectField.getName())) {
+			if (Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) ||
+				!values.containsKey(objectField.getName())) {
+
 				if (objectField.isRequired()) {
 					throw new ObjectEntryValuesException.Required(
 						objectField.getName());
@@ -2178,7 +2183,11 @@ public class ObjectEntryLocalServiceImpl
 			_setColumn(preparedStatement, index++, Types.BIGINT, objectEntryId);
 
 			for (ObjectField objectField : objectFields) {
-				if (!values.containsKey(objectField.getName())) {
+				if (Objects.equals(
+						objectField.getBusinessType(),
+						ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) ||
+					!values.containsKey(objectField.getName())) {
+
 					continue;
 				}
 
@@ -2502,6 +2511,13 @@ public class ObjectEntryLocalServiceImpl
 			dynamicObjectDefinitionTable.getObjectFields();
 
 		for (ObjectField objectField : objectFields) {
+			if (Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION)) {
+
+				continue;
+			}
+
 			if (!values.containsKey(objectField.getName())) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(
@@ -2566,7 +2582,11 @@ public class ObjectEntryLocalServiceImpl
 			int index = 1;
 
 			for (ObjectField objectField : objectFields) {
-				if (!values.containsKey(objectField.getName())) {
+				if (Objects.equals(
+						objectField.getBusinessType(),
+						ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION) ||
+					!values.containsKey(objectField.getName())) {
+
 					continue;
 				}
 

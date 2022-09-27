@@ -1,0 +1,94 @@
+definition {
+
+	macro addNewPolicyViaObject {
+		ApplicationsMenu.gotoPortlet(
+			category = "Object",
+			panel = "Control Panel",
+			portlet = "Raylife Policies");
+
+		LexiconEntry.gotoAdd();
+
+		Type(
+			key_fieldLabel = "Commission",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${commissionValue}");
+
+		if (!(isSet(endDate))) {
+			var endDate = DateUtil.getFormattedCurrentDate("MM/DD/YYYY");
+		}
+
+		Type(
+			key_fieldLabel = "End Date",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${endDate}");
+
+		Type(
+			key_fieldLabel = "Policy Owner Name",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "Policy Owner Name");
+
+		Click(
+			key_fieldLabel = "Policy Status",
+			locator1 = "ObjectField#LABEL_SELECT_FIELD");
+
+		Click(
+			key_label = "Executed",
+			locator1 = "PopulateObjectFormsConfiguration#DISPLAY_SELECT_OBJECT");
+
+		Type(
+			key_fieldLabel = "Product Name",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "Test Product Name");
+
+		var userID = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
+
+		Type(
+			key_fieldLabel = "User",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${userID}");
+
+		if (!(isSet(startDate))) {
+			var startDate = DateUtil.getFormattedCurrentDate("MM/DD/YYYY");
+		}
+
+		Type(
+			key_fieldLabel = "Start Date",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${startDate}");
+
+		Type(
+			key_fieldLabel = "Term Premium",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "1");
+
+		Button.clickSave();
+
+		WaitForPageLoad();
+	}
+
+	macro changeTimeFilter {
+		var dashboardTitle = StringUtil.lowerCase("${dashboardTitle}");
+
+		Select(
+			key_dashboardTitle = "${dashboardTitle}",
+			locator1 = "RaylifeAPDashboard#DASHBOARD_TIME_FILTER",
+			value1 = "${timeFilter}");
+	}
+
+	macro getCommissionEventValue {
+		if (!(isSet(eventIndex))) {
+			var eventIndex = "0";
+		}
+
+		MouseOver(
+			key_index = "${eventIndex}",
+			locator1 = "RaylifeAPDashboard#COMMISSION_EVENT");
+
+		var commissionValue = selenium.getText("RaylifeAPDashboard#COMMISSION_EVENT_TEXT");
+
+		var commissionValue = StringUtil.extractLast("${commissionValue}", "$");
+
+		return "${commissionValue}";
+	}
+
+}

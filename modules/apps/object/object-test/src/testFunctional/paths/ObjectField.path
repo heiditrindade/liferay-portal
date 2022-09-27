@@ -172,6 +172,11 @@
 		<td>//label[contains(.,'Field')]//..//div[contains(@aria-controls,'clay-dropdown-menu')]</td>
 		<td></td>
 	</tr>
+	<tr>
+		<td>LABEL_SELECT_FIELD</td>
+		<td>//label[normalize-space(text())='${key_fieldLabel}']/..//div[contains(@class,'select-field')]//div[contains(.,'Choose an Option')]</td>
+		<td></td>
+	</tr>
 </tbody>
 </table>
 </body>

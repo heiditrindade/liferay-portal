@@ -1,0 +1,54 @@
+@component-name = "portal-solutions"
+definition {
+
+	property osgi.modules.includes = "site-initializer-raylife-d2c";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Site Initializer Raylife D2C";
+
+	var testSiteName = "Raylife AP";
+	var testSiteURL = "raylife-ap";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		Raylife.createRaylifeSite(siteName = "${testSiteName}");
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		Raylife.tearDownCP();
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			User.logoutPG();
+		}
+	}
+
+    @description = "LPS-157614 - Verify that the graph value changes when selecting the 'This Month / 6 MO / YTD' options, according to the selected time period"
+	@priority = "4"
+	test IfGraphChangeSelectedTimePeriod {
+		task ("Go to Raylife AP Site") {
+			RaylifeAP.gotoRaylife();
+		}
+
+		var commission1 = RaylifeAPDashboard.getCommissionEventValue();
+
+        RaylifeAPDashboard.changeTimeFilter(
+			dashboardTitle = "Commission",
+			timeFilter = "6 MO");
+
+       var commission2 = RaylifeAPDashboard.getCommissionEventValue();
+
+		TestUtils.assertNotEquals(
+			actual = "${commission1}",
+			expected = "${commission2}");
+	}
+
+}

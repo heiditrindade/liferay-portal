@@ -1,5 +1,11 @@
 definition {
 
+	macro gotoRaylife {
+		Navigator.openSiteURL(siteName = "Raylife AP");
+
+		WaitForVisible(locator1 = "RaylifeAPDashboard#COMMISSION_CARD");
+	}
+
 	macro addRaylifeAPSite {
 		Site.openSitesAdmin();
 

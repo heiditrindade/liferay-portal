@@ -1,0 +1,13 @@
+definition {
+
+    macro changeTimeFilter {
+        var dashboardTitle = StringUtil.lowerCase("${dashboardTitle}");
+
+		Select(
+            locator1 = "RaylifeAPDashboard#DASHBOARD_TIME_FILTER",
+			key_dashboardTitle = "${dashboardTitle}",
+            value1 = "${timeFilter}");
+	}
+
+
+}

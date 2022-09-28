@@ -1,0 +1,87 @@
+@component-name = "portal-document-management"
+definition {
+    property testray.main.component.name = "Document Management";
+
+    setUp {
+        task("Set up instance and login") {
+
+            TestCase.setUpPortalInstance();
+
+            User.firstLoginPG();
+        }
+
+        task("Add Documents and Media Page and Widget") {
+
+            JSONLayout.addPublicLayout(
+                groupName = "Guest",
+                layoutName = "Documents and Media Page");
+
+            JSONLayout.addWidgetToPublicLayout(
+                column = "1",
+                groupName = "Guest",
+                layoutName = "Documents and Media Page",
+                widgetName = "Documents and Media");
+        }
+    }
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			DMDocument.tearDownCP();
+
+            JSONLayout.deletePublicLayout(
+				groupName = "Guest",
+				layoutName = "Documents and Media Page");
+
+			User.logoutPG();
+		}
+	}
+
+    @description = "Can Create a Documents and Media"
+    @priority = "5"
+    test CanCreateDM {
+		property portal.acceptance = "true";
+
+        task("Add image on Documents and Media widget and assert its presence") {
+
+            Navigator.gotoPage(pageName = "Documents and Media Page");
+
+            DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+            DMDocument.addCP(
+                dmDocumentDescription = "DM Document Description",
+                dmDocumentFile = "Document_1.jpg",
+                dmDocumentTitle = "DMTest");
+
+            Navigator.gotoPage(pageName = "Documents and Media Page");
+
+            DMNavigator.gotoDocumentCP(dmDocumentTitle = "DMTest");
+
+            DMDocument.viewCP(dmDocumentTitle = "DMTest");
+        }
+    }
+
+    @description = "Can Edit a Documents and Media"
+    @priority = "5"
+    test CanEditDM {
+
+
+    }
+    @description = "Can Delete a Documents and Media"
+    @priority = "5"
+    test CanDeleteDM {
+
+
+    }
+    @description = "Can Download a Documents and Media"
+    @priority = "5"
+    test CanDownloadDM {
+
+
+    }
+
+}

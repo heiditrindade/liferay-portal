@@ -45,16 +45,20 @@ definition {
 	test CanCreateDM {
 		property portal.acceptance = "true";
 
-		task ("Add image on Documents and Media widget and assert its presence") {
+		task ("Go to Documents and Media Page") {
 			Navigator.gotoPage(pageName = "Documents and Media Page");
 
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+		}
 
+		task ("Add image on Documents and Media widget") {
 			DMDocument.addCP(
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentFile = "Document_1.jpg",
 				dmDocumentTitle = "DMTest");
+		}
 
+		task ("Assert that image is present on Documents and Media widget") {
 			Navigator.gotoPage(pageName = "Documents and Media Page");
 
 			DMNavigator.gotoDocumentCP(dmDocumentTitle = "DMTest");

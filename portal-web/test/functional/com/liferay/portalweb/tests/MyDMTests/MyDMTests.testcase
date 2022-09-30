@@ -40,36 +40,51 @@ definition {
 		}
 	}
 
-	@description = "Can Edit a Documents and Media"
-	@priority = "5"
-	test CanEditDM {
-		task ("Go to Documents and Media Page") {
+    @description = "Can Delete a Documents and Media"
+    @priority = "5"
+    test CanDeleteDM {
+		task("Add files to DM widget") {
+
+			JSONDocument.addFileWithUploadedFile(
+						dmDocumentDescription = "DM Document Description",
+						dmDocumentTitle = "Document_1.jpg",
+						groupName = "Guest",
+						mimeType = "image/jpeg",
+						sourceFileName = "Document_1.jpg");
+
+			JSONDocument.addFileWithUploadedFile(
+						dmDocumentDescription = "DM Document Description",
+						dmDocumentTitle = "marketplace_icon.png",
+						groupName = "Guest",
+						mimeType = "image/jpeg",
+						sourceFileName = "marketplace_icon.png");
+
+		}
+
+		task("Delete a file") {
+
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMDocument.deleteCP(dmDocumentTitle = "Document_1.jpg");
+
 		}
 
-		task ("Add image to Documents and Media widget") {
-			DMDocument.addCP(
-				dmDocumentDescription = "DM Document Description",
-				dmDocumentFile = "Document_1.jpg",
-				dmDocumentTitle = "DMTest");
+		task("Check that file exist") {
+
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "marketplace_icon.png");
+
+			DMDocument.viewCP(dmDocumentTitle = "marketplace_icon.png");
+
 		}
 
-		task ("Change image file, title and description") {
-			DMDocument.editCP(
-				dmDocumentDescription = "DM Document Description Edited",
-				dmDocumentFileEdit = "marketplace_icon.png",
-				dmDocumentFileNameEdit = "marketplace_icon.png",
-				dmDocumentTitle = "DMTest",
-				dmDocumentTitleEdit = "DMTestEdited");
+		task("Check that file doesn't exist") {
 
-			task ("Assert that image and title were edited") {
-				Navigator.gotoPage(pageName = "Documents and Media Page");
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-				DMNavigator.gotoDocumentCP(dmDocumentTitle = "DMTestEdited");
+			DMDocument.cannotViewCP(dmDocumentTitle = "Document_1.jpg");
 
-				DMDocument.viewCP(dmDocumentTitle = "DMTestEdited");
-			}
 		}
-	}
+
+    }
 
 }

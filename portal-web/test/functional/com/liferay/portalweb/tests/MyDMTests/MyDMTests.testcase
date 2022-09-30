@@ -40,9 +40,9 @@ definition {
 		}
 	}
 
-	@description = "Can Delete a Documents and Media"
+	@description = "Can Download a Documents and Media"
 	@priority = "5"
-	test CanDeleteDM {
+	test CanDownloadDM {
 		task ("Add files to DM widget") {
 			JSONDocument.addFileWithUploadedFile(
 				dmDocumentDescription = "DM Document Description",
@@ -59,23 +59,26 @@ definition {
 				sourceFileName = "marketplace_icon.png");
 		}
 
-		task ("Delete a file") {
+		task ("Download file") {
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-			DMDocument.deleteCP(dmDocumentTitle = "Document_1.jpg");
+			DMDocument.downloadCP(
+				dmDocumentSize = "13 KB",
+				dmDocumentTitle = "Document_1.jpg");
+
 		}
 
-		task ("Check that file exist") {
-			DMNavigator.gotoDocumentCP(dmDocumentTitle = "marketplace_icon.png");
+		task ("Assert that file was downloaded") {
 
-			DMDocument.viewCP(dmDocumentTitle = "marketplace_icon.png");
+			DMDocument.assertFileNameFromTempFolder(fileName = "Document_1.jpg");
+
 		}
 
-		task ("Check that file doesn't exist") {
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+		task ("Asser that file wasn't downloaded") {
 
-			DMDocument.cannotViewCP(dmDocumentTitle = "Document_1.jpg");
+			DMDocument.assertNoFileNameFromTempFolder(fileName = "marketplace_icon.png");
 		}
+
 	}
 
 }

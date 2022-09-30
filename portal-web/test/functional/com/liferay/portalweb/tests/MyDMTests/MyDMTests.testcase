@@ -65,20 +65,15 @@ definition {
 			DMDocument.downloadCP(
 				dmDocumentSize = "13 KB",
 				dmDocumentTitle = "Document_1.jpg");
-
 		}
 
 		task ("Assert that file was downloaded") {
-
 			DMDocument.assertFileNameFromTempFolder(fileName = "Document_1.jpg");
-
 		}
 
 		task ("Asser that file wasn't downloaded") {
-
 			DMDocument.assertNoFileNameFromTempFolder(fileName = "marketplace_icon.png");
 		}
-
 	}
 
 }

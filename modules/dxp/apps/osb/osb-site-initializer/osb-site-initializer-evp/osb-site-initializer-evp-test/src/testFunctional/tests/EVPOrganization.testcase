@@ -39,6 +39,107 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-176607. Verify that is not possible to edit an organization information without EVP Manager role"
+	@priority = 5
+	test CanNotEditWithoutManagerRole {
+		task ("Given I have created a request for a new Organization") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "employee@liferay.com",
+				userLoginFullName = "Employee User");
+
+			EVPUtils.gotoEVP();
+
+			EVPNavigator.goToNavItem(navItem = "Organization");
+
+			Button.click(button = "Create an Organization");
+
+			EVPOrganization.fillOrganizationForm(
+				bankingInfo = "12345-6",
+				city = "Organization City",
+				contactEmail = "contact@organization.com",
+				contactName = "Contact Name",
+				contactPhone = "12 345678901",
+				country = "Country Site",
+				organizationName = "Organization Test",
+				organizationSite = "organization.com",
+				smallDescription = "Small Description",
+				state = "Organization State",
+				street = "Organization Street",
+				taxId = 12345,
+				zipCode = "12345-678");
+
+			EVPNavigator.goToNavItem(navItem = "Organization");
+		}
+
+		task ("And the Organization is aprooved by Manager and Finance Users") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "Manager User");
+
+			EVPUtils.gotoEVP();
+
+			EVPNavigator.goToNavItem(navItem = "Organization");
+
+			EVPOrganization.kebabMenuOrganization(organizationName = "Organization Test");
+
+			MenuItem.click(menuItem = "Review");
+
+			EVPOrganization.changeStatus(
+				button = "Approve",
+				typeMessage = "Your organization has been approved!");
+
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "finance@liferay.com",
+				userLoginFullName = "Finance User");
+
+			EVPUtils.gotoEVP();
+
+			EVPNavigator.goToNavItem(navItem = "Organization");
+
+			EVPOrganization.kebabMenuOrganization(organizationName = "Organization Test");
+
+			MenuItem.click(menuItem = "Review");
+
+			EVPOrganization.changeStatus(
+				button = "Approve",
+				typeMessage = "Your organization has been approved!");
+
+			EVPNavigator.goToNavItem(navItem = "Organization");
+		}
+
+		task ("When I open the kebab menu at the Organization ellipsis button") {
+			EVPOrganization.viewStatus(
+				organizationName = "Organization Test",
+				status = "Verified");
+
+			EVPOrganization.kebabMenuOrganization(organizationName = "Organization Test");
+		}
+
+		task ("Then I can see that there isn't an Edit button") {
+			MenuItem.viewNotPresent(menuItem = "Edit");
+		}
+
+		task ("When I log in as Employee User") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "employee@liferay.com",
+				userLoginFullName = "Employee User");
+
+			EVPUtils.gotoEVP();
+
+			EVPNavigator.goToNavItem(navItem = "Organization");
+
+			EVPOrganization.viewStatus(
+				organizationName = "Organization Test",
+				status = "Verified");
+
+			EVPOrganization.kebabMenuOrganization(organizationName = "Organization Test");
+		}
+
+		task ("Then I can see that there isn't an Edit button") {
+			MenuItem.viewNotPresent(menuItem = "Edit");
+		}
+	}
+
 	@description = "This is a test for LPS-172949. Make sure the edit button does not appear when the user's role is 'User employee'."
 	@priority = 5
 	test EmployeeCannotEditOrganizationInAwatingApprovalStatus {

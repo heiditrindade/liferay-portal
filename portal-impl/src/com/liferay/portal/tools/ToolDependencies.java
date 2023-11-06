@@ -25,13 +25,11 @@ import com.liferay.portal.kernel.security.auth.DefaultFullNameGenerator;
 import com.liferay.portal.kernel.security.auth.FullNameGenerator;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
-import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
@@ -39,11 +37,9 @@ import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.model.DefaultModelHintsImpl;
 import com.liferay.portal.security.permission.ResourceActionsImpl;
 import com.liferay.portal.security.xml.SecureXMLFactoryProviderImpl;
-import com.liferay.portal.service.permission.PortletPermissionImpl;
 import com.liferay.portal.util.DigesterImpl;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
 import com.liferay.portal.util.FileImpl;
-import com.liferay.portal.util.HtmlImpl;
 import com.liferay.portal.util.InitUtil;
 import com.liferay.portal.util.PortalImpl;
 import com.liferay.portal.xml.SAXReaderImpl;
@@ -106,18 +102,9 @@ public class ToolDependencies {
 				new Class<?>[] {FriendlyURLNormalizer.class},
 				(proxy, method, args) -> null));
 
-		HtmlUtil htmlUtil = new HtmlUtil();
-
-		htmlUtil.setHtml(new HtmlImpl());
-
 		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
 
 		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
-
-		PortletPermissionUtil portletPermissionUtil =
-			new PortletPermissionUtil();
-
-		portletPermissionUtil.setPortletPermission(new PortletPermissionImpl());
 
 		SAXReaderUtil saxReaderUtil = new SAXReaderUtil();
 

@@ -18,6 +18,7 @@ import com.liferay.commerce.exception.CommerceOrderGuestCheckoutException;
 import com.liferay.commerce.exception.CommerceOrderPaymentMethodException;
 import com.liferay.commerce.exception.CommerceOrderShippingAddressException;
 import com.liferay.commerce.exception.CommerceOrderShippingMethodException;
+import com.liferay.commerce.exception.CommerceOrderStatusException;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.CommerceOrderValidatorRegistry;
@@ -40,7 +41,6 @@ import com.liferay.commerce.util.BaseCommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
-import com.liferay.commerce.util.CommerceShippingHelper;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -105,10 +105,7 @@ public class OrderSummaryCommerceCheckoutStep extends BaseCommerceCheckoutStep {
 		throws Exception {
 
 		try {
-			String commerceOrderUuid = ParamUtil.getString(
-				actionRequest, "commerceOrderUuid");
-
-			_validateCommerceOrder(actionRequest, commerceOrderUuid);
+			_validateCommerceOrder(actionRequest);
 
 			_checkoutCommerceOrder(actionRequest, actionResponse);
 		}
@@ -248,11 +245,14 @@ public class OrderSummaryCommerceCheckoutStep extends BaseCommerceCheckoutStep {
 						ServiceContextFactory.getInstance(
 							CommerceOrder.class.getName(), actionRequest);
 
-					_commerceOrderService.updateInfo(
+					commerceOrder = _commerceOrderService.updateInfo(
 						commerceOrder.getCommerceOrderId(),
 						commerceOrder.getPrintedNote(),
 						requestedDeliveryDateMonth, requestedDeliveryDateDay,
 						requestedDeliveryDateYear, 0, 0, serviceContext);
+
+					httpServletRequest.setAttribute(
+						CommerceCheckoutWebKeys.COMMERCE_ORDER, commerceOrder);
 				}
 			}
 
@@ -300,20 +300,21 @@ public class OrderSummaryCommerceCheckoutStep extends BaseCommerceCheckoutStep {
 			checkoutRequestedDeliveryDateEnabled();
 	}
 
-	private void _validateCommerceOrder(
-			ActionRequest actionRequest, String commerceOrderUuid)
+	private void _validateCommerceOrder(ActionRequest actionRequest)
 		throws Exception {
 
-		long groupId =
-			_commerceChannelLocalService.getCommerceChannelGroupIdBySiteGroupId(
-				_portal.getScopeGroupId(actionRequest));
+		CommerceOrder commerceOrder = (CommerceOrder)actionRequest.getAttribute(
+			CommerceCheckoutWebKeys.COMMERCE_ORDER);
 
-		CommerceOrder commerceOrder =
-			_commerceOrderService.getCommerceOrderByUuidAndGroupId(
-				commerceOrderUuid, groupId);
+		commerceOrder = _commerceOrderService.getCommerceOrder(
+			commerceOrder.getCommerceOrderId());
+
+		if (!commerceOrder.isOpen()) {
+			throw new CommerceOrderStatusException();
+		}
 
 		if ((commerceOrder.getShippingAddressId() <= 0) &&
-			_commerceShippingHelper.isShippable(commerceOrder)) {
+			commerceOrder.isShippable()) {
 
 			throw new CommerceOrderShippingAddressException();
 		}
@@ -332,7 +333,7 @@ public class OrderSummaryCommerceCheckoutStep extends BaseCommerceCheckoutStep {
 		if ((commerceOrder.getCommerceShippingMethodId() <= 0) &&
 			_commerceCheckoutStepHttpHelper.
 				isActiveShippingMethodCommerceCheckoutStep(
-					httpServletRequest)) {
+					commerceOrder, httpServletRequest)) {
 
 			throw new CommerceOrderShippingMethodException();
 		}
@@ -419,9 +420,6 @@ public class OrderSummaryCommerceCheckoutStep extends BaseCommerceCheckoutStep {
 
 	@Reference
 	private CommerceShippingEngineRegistry _commerceShippingEngineRegistry;
-
-	@Reference
-	private CommerceShippingHelper _commerceShippingHelper;
 
 	@Reference
 	private CommerceTermEntryLocalService _commerceTermEntryLocalService;

@@ -66,6 +66,7 @@ create index IX_F01F1EEA on ObjectLayoutTab (objectLayoutId);
 create index IX_4CC508B8 on ObjectLayoutTab (objectRelationshipId);
 create index IX_94D361A6 on ObjectLayoutTab (uuid_[$COLUMN_LENGTH:75$], companyId);
 
+create index IX_22D86D64 on ObjectRelationship (dbTableName[$COLUMN_LENGTH:75$], reverse);
 create index IX_8CFBF7DF on ObjectRelationship (objectDefinitionId1, deletionType[$COLUMN_LENGTH:75$], reverse);
 create index IX_97E37468 on ObjectRelationship (objectDefinitionId1, edge);
 create index IX_A71785B6 on ObjectRelationship (objectDefinitionId1, name[$COLUMN_LENGTH:75$]);
@@ -92,6 +93,7 @@ create index IX_4D699221 on ObjectStateTransition (uuid_[$COLUMN_LENGTH:75$], co
 
 create unique index IX_7BDE4AC6 on ObjectValidationRule (externalReferenceCode[$COLUMN_LENGTH:75$], companyId, objectDefinitionId);
 create index IX_C476B36E on ObjectValidationRule (objectDefinitionId, active_);
+create index IX_EE533031 on ObjectValidationRule (objectDefinitionId, engine[$COLUMN_LENGTH:255$]);
 create index IX_465D010A on ObjectValidationRule (objectDefinitionId, outputType[$COLUMN_LENGTH:75$]);
 create index IX_40F1E68E on ObjectValidationRule (uuid_[$COLUMN_LENGTH:75$], companyId);
 

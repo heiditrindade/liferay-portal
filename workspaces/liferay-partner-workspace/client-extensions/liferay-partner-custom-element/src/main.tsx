@@ -41,9 +41,7 @@ const appRoutes: AppRouteComponent = {
 	[AppRouteType.DEAL_REGISTRATION_FORM]: <DealRegistrationForm />,
 	[AppRouteType.DEAL_REGISTRATION_LIST]: (
 		<DealRegistrationList
-			getFilteredItems={(items) =>
-				items.filter((item) => item.STATUS !== 'Qualified')
-			}
+			dealRegistrationFilter="leadStatus ne 'Qualified'"
 			sort="dateCreated:desc"
 		/>
 	),
@@ -115,7 +113,7 @@ class PartnerPortalRemoteAppComponent extends HTMLElement {
 					liferayWebDAV={
 						super.getAttribute('liferaywebdavurl') as string
 					}
-					route={super.getAttribute('route') as AppRouteType}
+					route={super.getAttribute('path') as AppRouteType}
 				/>
 			);
 		}

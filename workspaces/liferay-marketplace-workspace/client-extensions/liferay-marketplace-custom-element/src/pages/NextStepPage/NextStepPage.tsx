@@ -20,8 +20,8 @@ import {
 	getProductById,
 } from '../../utils/api';
 import {
+	getAccountImage,
 	getThumbnailByProductAttachment,
-	showAccountImage,
 	showAppImage,
 } from '../../utils/util';
 
@@ -144,14 +144,15 @@ export function NextStepPage({
 								To license your app, you can click Continue
 								Configuration below. Find your Order ID and
 								choose Create License Key. To create a license,
-								you must have at least one your instance details
-								available - IP address, MAC address or hostname.
+								you must have at least one of your instance
+								details available - IP address, MAC address or
+								hostname.
 							</p>
 						</>
 					) : (
 						<>
 							<p>
-								Your <strong>{appName}</strong> app is ready for
+								<strong>{appName}</strong> app is ready for
 								download.
 							</p>
 							<p>
@@ -166,7 +167,7 @@ export function NextStepPage({
 								To download your app, you can click Continue
 								Configuration below. To find your app download,
 								find your Order ID and choose Manage → Download
-								LPKG.
+								App.
 							</p>
 						</>
 					)
@@ -180,10 +181,12 @@ export function NextStepPage({
 					isTrial ? (
 						<>
 							<p>
-								Congratulations on the purchase of{' '}
-								<strong>{appName}</strong>. You will need to
-								create a license your app before deploying to
-								your DXP instance.
+								Congratulations on agreeing to purchase{' '}
+								<strong>{appName}</strong>. Payment is required
+								before licensing the app. An invoice will be
+								sent to the email address listed in the order.
+								Once payment is processed, you will be notified
+								as to the next steps to license your app.
 							</p>
 							<p>
 								{orderId && (
@@ -197,8 +200,9 @@ export function NextStepPage({
 								To license your app, you can click Continue
 								Configuration below. Find your Order ID and
 								choose Create License Key. To create a license,
-								you must have at least one your instance details
-								available - IP address, MAC address or hostname.
+								you must have at least one of your instance
+								details available - IP address, MAC address or
+								hostname.
 							</p>
 						</>
 					) : (
@@ -209,9 +213,7 @@ export function NextStepPage({
 								before licensing the app. An invoice will be
 								sent to the email address listed in the order.
 								Once payment is processed, you will be notified
-								as to the next steps to license your app. Your{' '}
-								<strong>{appName}</strong> app is ready for
-								download.
+								as to the next steps to license your app.
 							</p>
 							<p>
 								{orderId && (
@@ -238,28 +240,26 @@ export function NextStepPage({
 			>
 				<div className="next-step-page-content">
 					{!children && (
-						<>
-							<div className="next-step-page-cards">
-								<AccountAndAppCard
-									category="Application"
-									logo={appLogo ? appLogo : catalogIcon}
-									title={appName ?? ''}
-								></AccountAndAppCard>
+						<div className="next-step-page-cards">
+							<AccountAndAppCard
+								category="Application"
+								logo={appLogo ? appLogo : catalogIcon}
+								title={appName ?? ''}
+							></AccountAndAppCard>
 
+							<div className="icon-container">
 								<ClayIcon
-									className="next-step-page-icon"
+									className="m-0 next-step-page-icon"
 									symbol="arrow-right-full"
 								/>
-
-								<AccountAndAppCard
-									category="DXP Console"
-									logo={showAccountImage(
-										accountLogo as string
-									)}
-									title={accountName ?? ''}
-								></AccountAndAppCard>
 							</div>
-						</>
+
+							<AccountAndAppCard
+								category="Account"
+								logo={getAccountImage(accountLogo as string)}
+								title={accountName ?? ''}
+							></AccountAndAppCard>
+						</div>
 					)}
 
 					<div className="next-step-page-text">
@@ -278,16 +278,22 @@ export function NextStepPage({
 
 							window.location.href = customerDashboardCallbackURL;
 						}}
-						onClickContinue={
-							onClickContinue ??
-							(() => {
+						onClickContinue={() => {
+							if (onClickContinue) {
 								window.location.href =
 									'https://console.marketplacedemo.liferay.sh/projects';
-							})
-						}
+							}
+						}}
 						showBackButton={showBackButton}
 						showContinueButton={false}
 					/>
+					{(paymentStatus === PaymentStatus.PAID || isTrial) && (
+						<div className="d-flex justify-content-end">
+							<a href="#">
+								<ins>Learn more about App Configuration</ins>
+							</a>
+						</div>
+					)}
 				</div>
 			</div>
 		</>

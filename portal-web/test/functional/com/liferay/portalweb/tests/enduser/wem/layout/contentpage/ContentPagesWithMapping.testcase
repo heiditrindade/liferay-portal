@@ -584,7 +584,7 @@ definition {
 				key_url = "https://liferay.com",
 				locator1 = "Fragment#FRAGMENT_LINK");
 
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.selectPopUp(value1 = "null");
 
 			AssertLocation.assertPartialLocation(value1 = "https://www.liferay.com");
 		}
@@ -1578,25 +1578,9 @@ definition {
 
 			NavItem.gotoStructures();
 
-			WebContentStructures.addCP(structureName = "WC Structure Name");
-
-			DataEngine.addFieldsWithDefaultReference(fieldNameList = "Text,Rich Text,Date");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Text Box",
-				fieldName = "Text",
-				fieldType = "Multiple Lines");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Integer",
-				fieldName = "Numeric");
-
-			DataEngine.addField(
-				fieldFieldLabel = "Decimal",
-				fieldName = "Numeric",
-				numericType = "Decimal");
-
-			WebContentStructures.saveCP();
+			WebContentStructures.importStructure(
+				structureName = "WC Structure Name",
+				uploadFileName = "Structure_All_Fields.json");
 		}
 
 		task ("Add a web content based on new structure") {
@@ -1607,7 +1591,7 @@ definition {
 			WebContent.addWithStructureCP(
 				webContentDate = "10/10/2020",
 				webContentNumeric = 9,
-				webContentNumericFieldLabel = "Integer",
+				webContentNumericFieldLabel = "Numeric",
 				webContentRichText = "This is a Rich Text field",
 				webContentText = "This is a Text field",
 				webContentTitle = "Web Content Title");
@@ -1619,10 +1603,6 @@ definition {
 				webContentNumericFieldLabel = "Decimal",
 				webContentText = "This is a Text Box field",
 				webContentTextFieldLabel = "Text Box");
-
-			WebContent.addWithStructureCP(
-				webContentText = "This is a Text field",
-				webContentTitle = "Web Content Title");
 
 			PortletEntry.publish();
 		}
@@ -1695,7 +1675,7 @@ definition {
 
 			Select(
 				locator1 = "PageEditorEditableLink#FIELD",
-				value1 = "Integer");
+				value1 = "Numeric");
 
 			PageEditor.waitForAutoSave();
 
@@ -2883,7 +2863,7 @@ definition {
 			}
 
 			task ("View editable fields' link") {
-				SelectWindow.selectPopUp(locator1 = "null");
+				SelectWindow.selectPopUp(value1 = "null");
 
 				AssertVisible(
 					key_append = "[normalize-space(text())='Heading Example']",

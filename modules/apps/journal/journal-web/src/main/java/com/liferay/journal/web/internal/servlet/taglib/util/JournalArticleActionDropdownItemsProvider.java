@@ -378,6 +378,8 @@ public class JournalArticleActionDropdownItemsProvider {
 								 WorkflowConstants.STATUS_SCHEDULED)),
 						_getExpireArticleActionConsumer(articleId)
 					).build());
+
+				dropdownGroupItem.setSeparator(true);
 			}
 		).build();
 	}
@@ -820,7 +822,7 @@ public class JournalArticleActionDropdownItemsProvider {
 				PortletURLBuilder.createActionURL(
 					_liferayPortletResponse
 				).setActionName(
-					"/journal/publish_article"
+					"/journal/publish_articles"
 				).setBackURL(
 					_getRedirect()
 				).setParameter(

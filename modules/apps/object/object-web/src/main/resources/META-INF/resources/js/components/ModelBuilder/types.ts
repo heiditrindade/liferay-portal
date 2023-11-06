@@ -144,7 +144,7 @@ export type TAction =
 	| {
 			payload: {
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				objectRelationshipEdges?: Edge<ObjectRelationshipEdgeData>[];
 				selectedObjectRelationshipId: number;
 			};
 			type: TYPES.SET_SELECTED_OBJECT_RELATIONSHIP_EDGE;
@@ -154,6 +154,12 @@ export type TAction =
 				updatedShowChangesSaved: boolean;
 			};
 			type: TYPES.SET_SHOW_CHANGES_SAVED;
+	  }
+	| {
+			payload: {
+				updatedShowSidebars: boolean;
+			};
+			type: TYPES.SET_SHOW_SIDEBARS;
 	  }
 	| {
 			payload: {
@@ -200,6 +206,7 @@ export type TState = {
 	selectedObjectFolder: ObjectFolder;
 	selectedObjectRelationship?: Edge<ObjectRelationshipEdgeData>;
 	showChangesSaved: boolean;
+	showSidebars: boolean;
 	workflowStatusJSONArray: LabelValueObject[];
 };
 

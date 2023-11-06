@@ -57,3 +57,15 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 		%>'
 	/>
 </div>
+
+<div>
+	<react:component
+		module="js/components/ModalSelectObjectFields"
+	/>
+</div>
+
+<div>
+	<react:component
+		module="js/components/ModalDeletionNotAllowed"
+	/>
+</div>

@@ -26,6 +26,7 @@ export default function useAccountInformation() {
 		aRRAmountTotal: 0,
 		growthArrTotal: 0,
 		renewalArrTotal: 0,
+		targetArr: 0,
 	});
 	const [checkedProperties, setCheckedProperties] = useState({
 		arr: false,
@@ -46,9 +47,11 @@ export default function useAccountInformation() {
 			`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/accounts/by-external-reference-code/${userAccount.accountBriefs[0].externalReferenceCode}`
 	);
 
+	const currency = account ? account.currency : 'USD';
+
 	const {data: accountUserAccounts} = useGet<LiferayItems<UserAccount[]>>(
 		account?.externalReferenceCode &&
-			`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/accounts/by-external-reference-code/${account.externalReferenceCode}/user-accounts`
+			`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/accounts/by-external-reference-code/${account.externalReferenceCode}/user-accounts?pageSize=-1`
 	);
 
 	const {
@@ -56,7 +59,23 @@ export default function useAccountInformation() {
 		isValidating: isValidatingOpportunities,
 	} = useGet<LiferayItems<Opportunity[]>>(
 		account?.name &&
-			`/o/${LiferayAPIs.OBJECT}/opportunitysfs?pageSize=200&filter=accountName eq '${account.name}'`
+			`/o/${LiferayAPIs.OBJECT}/opportunitysfs?pageSize=200&sort=closeDate:desc&filter=stage eq 'Closed Won'`
+	);
+
+	const {
+		data: opportunitiesNB,
+		isValidating: isValidatingOpportunitiesNB,
+	} = useGet<LiferayItems<Opportunity[]>>(
+		account?.name &&
+			`/o/${LiferayAPIs.OBJECT}/opportunitysfs?pageSize=200&sort=closeDate:desc&filter=type eq 'New Business' and stage eq 'Closed Won'`
+	);
+
+	const {
+		data: opportunitiesNP,
+		isValidating: isValidatingOpportunitiesNP,
+	} = useGet<LiferayItems<Opportunity[]>>(
+		account?.name &&
+			`/o/${LiferayAPIs.OBJECT}/opportunitysfs?pageSize=200&sort=closeDate:desc&filter=type eq 'New Project Existing Business' and stage eq 'Closed Won'`
 	);
 
 	const {data: partnerLevel, isValidating: isValidatingPartnerLevel} = useGet<
@@ -66,26 +85,35 @@ export default function useAccountInformation() {
 			`/o/${LiferayAPIs.OBJECT}/partnerlevels/by-external-reference-code/${account.r_prtLvlToAcc_c_partnerLevelERC}`
 	);
 
+	const newProjectExistingBusiness =
+		opportunitiesNP &&
+		opportunitiesNB &&
+		opportunitiesNP.totalCount + opportunitiesNB.totalCount;
+
 	useEffect(() => {
 		const getARRValues = (
-			accountData: AccountEntry,
-			opportunitiesData: LiferayItems<Opportunity[]>
+			opportunitiesData: LiferayItems<Opportunity[]>,
+			accountData: AccountEntry
 		) => {
 			const aRRResults = opportunitiesData.items.reduce(
 				(aRRAccumulator, data: Opportunity) => ({
 					aRRAmountTotal:
-						aRRAccumulator.aRRAmountTotal +
-						data.growthArr +
-						data.renewalArr,
+						(Number(aRRAccumulator.aRRAmountTotal) || 0) +
+						(Number(data.growthArr) || 0) +
+						(Number(data.renewalArr) || 0),
 					growthArrTotal:
-						aRRAccumulator.growthArrTotal + data.growthArr,
+						(Number(aRRAccumulator.growthArrTotal) || 0) +
+						(Number(data.growthArr) || 0),
 					renewalArrTotal:
-						aRRAccumulator.renewalArrTotal + data.renewalArr,
+						(Number(aRRAccumulator.renewalArrTotal) || 0) +
+						(Number(data.renewalArr) || 0),
+					targetArr: Number(accountData.targetArr) || 0,
 				}),
 				{
 					aRRAmountTotal: 0,
 					growthArrTotal: 0,
 					renewalArrTotal: 0,
+					targetArr: 0,
 				}
 			);
 
@@ -94,7 +122,8 @@ export default function useAccountInformation() {
 
 		const formatCheckedProperties = (
 			aRRResults: {[key: string]: number},
-			accountData: AccountEntry
+			accountData: AccountEntry,
+			newProjectExistingBusiness: number
 		) => {
 			const properties = {
 				arr: false,
@@ -127,7 +156,7 @@ export default function useAccountInformation() {
 						].goalARR;
 
 					const hasMatchingNPOrNB =
-						(accountData.newProjectExistingBusiness as number) >=
+						(newProjectExistingBusiness as number) >=
 						partnerLevelProperties[
 							partnerLevel.partnerLevelType.key
 						].newProjectExistingBusiness;
@@ -204,14 +233,16 @@ export default function useAccountInformation() {
 			userAccount &&
 			opportunities &&
 			account &&
+			newProjectExistingBusiness &&
 			accountUserAccounts &&
 			partnerLevel
 		) {
-			const aRRResults = getARRValues(account, opportunities);
+			const aRRResults = getARRValues(opportunities, account);
 
 			const {headcount, properties} = formatCheckedProperties(
 				aRRResults,
-				account
+				account,
+				newProjectExistingBusiness
 			);
 
 			setARRResults(aRRResults);
@@ -224,17 +255,22 @@ export default function useAccountInformation() {
 		account,
 		accountUserAccounts,
 		partnerLevel,
+		newProjectExistingBusiness,
 	]);
 
 	return {
 		aRRResults,
 		account,
 		checkedProperties,
+		currency,
 		headcount: headcountAccumulator,
 		loading:
 			isValidatingOpportunities ||
+			isValidatingOpportunitiesNB ||
+			isValidatingOpportunitiesNP ||
 			isValidatingPartnerLevel ||
 			isValidatingAccount,
+		newProjectExistingBusiness,
 		partnerLevel,
 	};
 }

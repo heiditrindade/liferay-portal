@@ -97,9 +97,13 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 					parentItemId: parentId,
 					position,
 				})
-			).catch(() => {
-				setDisabled(false);
-			});
+			)
+				.then(() => {
+					setDisabled(false);
+				})
+				.catch(() => {
+					setDisabled(false);
+				});
 		}
 	);
 
@@ -113,7 +117,7 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 	) : (
 		<ListItem
 			disabled={disabled || isDraggingSource || item.disabled}
-			handlerRef={item.disabled ? null : sourceRef}
+			handlerRef={item.disabled || disabled ? null : sourceRef}
 			item={item}
 			onToggleHighlighted={onToggleHighlighted}
 		/>
@@ -154,7 +158,7 @@ const ListItem = ({disabled, handlerRef, item, onToggleHighlighted}) => {
 				<div className="align-items-center d-flex page-editor__fragments-widgets__tab-list-item-body">
 					<ClayIcon className="mr-3" symbol={item.icon} />
 
-					<div className="text-truncate title">{item.label}</div>
+					<div className="title">{item.label}</div>
 				</div>
 
 				{!disabled && (

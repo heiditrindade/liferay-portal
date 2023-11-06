@@ -5,6 +5,8 @@
 
 package com.liferay.jenkins.plugin.events.jms;
 
+import com.liferay.jenkins.plugin.events.JenkinsEventsUtil;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -95,6 +97,13 @@ public class JMSQueue {
 
 			TextMessage textMessage = _session.createTextMessage();
 
+			String masterHostname = JenkinsEventsUtil.getMasterHostname();
+
+			if (masterHostname != null) {
+				textMessage.setStringProperty(
+					"jenkins-master-name", masterHostname);
+			}
+
 			textMessage.setText(message);
 
 			messageProducer.send(textMessage);
@@ -121,13 +130,23 @@ public class JMSQueue {
 					_messageConsumer.close();
 				}
 
-				_messageConsumer = _session.createConsumer(_queue);
+				String masterHostname = JenkinsEventsUtil.getMasterHostname();
+
+				if (masterHostname != null) {
+					_messageConsumer = _session.createConsumer(
+						_queue,
+						"(jenkins-master-name = " + masterHostname + ")");
+				}
+				else {
+					_messageConsumer = _session.createConsumer(_queue);
+				}
 
 				_messageConsumer.setMessageListener(messageListener);
 
 				if (_log.isInfoEnabled()) {
 					_log.info(
-						"Subscribed to " + _jmsBrokerURL + " at " + _queueName);
+						"Subscribed to " + _jmsBrokerURL + " at " + _queueName +
+							" for " + masterHostname);
 				}
 			}
 			catch (JMSException jmsException) {

@@ -714,6 +714,10 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
@@ -846,15 +850,15 @@ definition {
 
 		Role.removePermissionPG(
 			permissionDefinitionKey = "CONTENT_PERMISSIONS_VIEW_CHECKBOX",
-			roleTitle = "guest");
+			roleTitle = "Guest");
 
 		Role.removePermissionPG(
 			permissionDefinitionKey = "CONTENT_PERMISSIONS_ADD_DISCUSSION_CHECKBOX",
-			roleTitle = "site-member");
+			roleTitle = "Site Member");
 
 		Role.removePermissionPG(
 			permissionDefinitionKey = "CONTENT_PERMISSIONS_VIEW_CHECKBOX",
-			roleTitle = "site-member");
+			roleTitle = "Site Member");
 
 		for (var permissionDefinitionKey : list "ACTION_ADD_DISCUSSION,ACTION_ADD_LAYOUT,ACTION_CONFIGURE_PORTLETS,ACTION_CUSTOMIZE,ACTION_DELETE,ACTION_DELETE_DISCUSSION,ACTION_PERMISSIONS,ACTION_UPDATE,ACTION_UPDATE_DISCUSSION,ACTION_VIEW") {
 			Team.definePermissionPG(
@@ -1495,6 +1499,10 @@ definition {
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		task ("Assgin Default Site to new user") {
+			Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 			ApplicationsMenu.gotoPortlet(
 				category = "Users",
 				panel = "Control Panel",

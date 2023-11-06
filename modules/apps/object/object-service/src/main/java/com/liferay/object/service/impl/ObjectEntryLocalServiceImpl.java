@@ -6,11 +6,9 @@
 package com.liferay.object.service.impl;
 
 import com.liferay.account.constants.AccountConstants;
-import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryOrganizationRelTable;
 import com.liferay.account.model.AccountEntryTable;
 import com.liferay.account.model.AccountEntryUserRelTable;
-import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.link.constants.AssetLinkConstants;
@@ -106,7 +104,6 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.encryptor.Encryptor;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -142,7 +139,6 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -178,6 +174,7 @@ import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
+import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.IOException;
@@ -929,8 +926,8 @@ public class ObjectEntryLocalServiceImpl
 		Map<String, Object> baseModelAttributes = new HashMap<>();
 
 		PersistedModelLocalService persistedModelLocalService =
-			_persistedModelLocalServiceRegistry.getPersistedModelLocalService(
-				objectDefinition.getClassName());
+			PersistedModelLocalServiceRegistryUtil.
+				getPersistedModelLocalService(objectDefinition.getClassName());
 
 		DynamicObjectDefinitionTable dynamicObjectDefinitionTable =
 			_getDynamicObjectDefinitionTable(
@@ -1044,8 +1041,8 @@ public class ObjectEntryLocalServiceImpl
 		}
 
 		PersistedModelLocalService persistedModelLocalService =
-			_persistedModelLocalServiceRegistry.getPersistedModelLocalService(
-				objectDefinition.getClassName());
+			PersistedModelLocalServiceRegistryUtil.
+				getPersistedModelLocalService(objectDefinition.getClassName());
 
 		JSONObject jsonObject = _jsonFactory.createJSONObject(
 			String.valueOf(
@@ -2423,8 +2420,7 @@ public class ObjectEntryLocalServiceImpl
 					}
 
 					return _getPermissionWherePredicate(
-						objectDefinition2,
-						dynamicObjectDefinitionTablePrimaryKeyColumn);
+						dynamicObjectDefinitionTable, groupId);
 				}
 			).and(
 				() -> {
@@ -2619,9 +2615,7 @@ public class ObjectEntryLocalServiceImpl
 					}
 
 					return _getPermissionWherePredicate(
-						_objectDefinitionPersistence.findByPrimaryKey(
-							objectRelationship.getObjectDefinitionId2()),
-						primaryKeyColumn);
+						dynamicObjectDefinitionTable, groupId);
 				}
 			).and(
 				ObjectEntrySearchUtil.getRelatedModelsPredicate(
@@ -2680,34 +2674,6 @@ public class ObjectEntryLocalServiceImpl
 					permissionChecker.getUserId())
 			).withParentheses()
 		).withParentheses();
-	}
-
-	private Predicate _getPermissionWherePredicate(
-			ObjectDefinition objectDefinition,
-			Column<DynamicObjectDefinitionTable, Long> primaryKeyColumn)
-		throws PortalException {
-
-		long[] groupIds = new long[0];
-
-		if (objectDefinition.isAccountEntryRestricted()) {
-			PermissionChecker permissionChecker =
-				PermissionThreadLocal.getPermissionChecker();
-
-			groupIds = ListUtil.toLongArray(
-				_accountEntryLocalService.getUserAccountEntries(
-					permissionChecker.getUserId(),
-					AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, null,
-					new String[] {
-						AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
-						AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON
-					},
-					WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS),
-				AccountEntry::getAccountEntryGroupId);
-		}
-
-		return _inlineSQLHelper.getPermissionWherePredicate(
-			objectDefinition.getClassName(), primaryKeyColumn, groupIds);
 	}
 
 	private Object _getResult(
@@ -3057,8 +3023,22 @@ public class ObjectEntryLocalServiceImpl
 	 * @see com.liferay.portal.upgrade.util.Table#getValue
 	 */
 	private Object _getValue(Object object, int sqlType) throws SQLException {
-		if (sqlType == Types.BIGINT) {
-			return GetterUtil.getLong(object);
+		if (_isNumeric(sqlType)) {
+			if (object == null) {
+				return null;
+			}
+			else if (sqlType == Types.BIGINT) {
+				return GetterUtil.getLong(object);
+			}
+			else if (sqlType == Types.DECIMAL) {
+				return object;
+			}
+			else if (sqlType == Types.DOUBLE) {
+				return GetterUtil.getDouble(object);
+			}
+			else if (sqlType == Types.INTEGER) {
+				return GetterUtil.getInteger(object);
+			}
 		}
 		else if (sqlType == Types.BOOLEAN) {
 			return GetterUtil.getBoolean(object);
@@ -3074,15 +3054,6 @@ public class ObjectEntryLocalServiceImpl
 			Date date = (Date)object;
 
 			return new Timestamp(date.getTime());
-		}
-		else if (sqlType == Types.DECIMAL) {
-			return object;
-		}
-		else if (sqlType == Types.DOUBLE) {
-			return GetterUtil.getDouble(object);
-		}
-		else if (sqlType == Types.INTEGER) {
-			return GetterUtil.getInteger(object);
 		}
 		else if (sqlType == Types.VARCHAR) {
 			return object;
@@ -3403,6 +3374,16 @@ public class ObjectEntryLocalServiceImpl
 		}
 	}
 
+	private boolean _isNumeric(int sqlType) {
+		if ((sqlType == Types.BIGINT) || (sqlType == Types.DECIMAL) ||
+			(sqlType == Types.DOUBLE) || (sqlType == Types.INTEGER)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private List<Object[]> _list(
 			DSLQuery dslQuery, long objectDefinitionId,
 			Expression<?>[] selectExpressions)
@@ -3526,10 +3507,7 @@ public class ObjectEntryLocalServiceImpl
 		else if (javaTypeClass == Double.class) {
 			Number number = (Number)object;
 
-			if (number == null) {
-				number = Double.valueOf(0D);
-			}
-			else if (!(number instanceof Double)) {
+			if ((number != null) && !(number instanceof Double)) {
 				number = number.doubleValue();
 			}
 
@@ -3538,10 +3516,7 @@ public class ObjectEntryLocalServiceImpl
 		else if (javaTypeClass == Integer.class) {
 			Number number = (Number)object;
 
-			if (number == null) {
-				number = Integer.valueOf(0);
-			}
-			else if (!(number instanceof Integer)) {
+			if ((number != null) && !(number instanceof Integer)) {
 				number = number.intValue();
 			}
 
@@ -3550,10 +3525,7 @@ public class ObjectEntryLocalServiceImpl
 		else if (javaTypeClass == Long.class) {
 			Number number = (Number)object;
 
-			if (number == null) {
-				number = Long.valueOf(0L);
-			}
-			else if (!(number instanceof Long)) {
+			if ((number != null) && !(number instanceof Long)) {
 				number = number.longValue();
 			}
 
@@ -3633,8 +3605,27 @@ public class ObjectEntryLocalServiceImpl
 			Object value)
 		throws Exception {
 
-		if (sqlType == Types.BIGINT) {
-			preparedStatement.setLong(index, GetterUtil.getLong(value));
+		if (_isNumeric(sqlType)) {
+			if ((value == null) || StringPool.BLANK.equals(value)) {
+				preparedStatement.setNull(index, sqlType);
+			}
+			else if (sqlType == Types.BIGINT) {
+				preparedStatement.setLong(index, GetterUtil.getLong(value));
+			}
+			else if (sqlType == Types.DECIMAL) {
+				preparedStatement.setBigDecimal(
+					index,
+					new BigDecimal(_toPeriodSeparator(String.valueOf(value))));
+			}
+			else if (sqlType == Types.DOUBLE) {
+				preparedStatement.setDouble(
+					index,
+					GetterUtil.getDouble(
+						_toPeriodSeparator(String.valueOf(value))));
+			}
+			else {
+				preparedStatement.setInt(index, GetterUtil.getInteger(value));
+			}
 		}
 		else if (sqlType == Types.BLOB) {
 			if (PostgreSQLJDBCUtil.isPGStatement(preparedStatement)) {
@@ -3682,24 +3673,6 @@ public class ObjectEntryLocalServiceImpl
 				preparedStatement.setTimestamp(
 					index, new Timestamp(date.getTime()));
 			}
-		}
-		else if (sqlType == Types.DECIMAL) {
-			if (Validator.isNull(String.valueOf(value))) {
-				value = BigDecimal.ZERO;
-			}
-
-			preparedStatement.setBigDecimal(
-				index,
-				new BigDecimal(_toPeriodSeparator(String.valueOf(value))));
-		}
-		else if (sqlType == Types.DOUBLE) {
-			preparedStatement.setDouble(
-				index,
-				GetterUtil.getDouble(
-					_toPeriodSeparator(String.valueOf(value))));
-		}
-		else if (sqlType == Types.INTEGER) {
-			preparedStatement.setInt(index, GetterUtil.getInteger(value));
 		}
 		else if (sqlType == Types.VARCHAR) {
 			preparedStatement.setString(index, String.valueOf(value));
@@ -4552,9 +4525,6 @@ public class ObjectEntryLocalServiceImpl
 			() -> false);
 
 	@Reference
-	private AccountEntryLocalService _accountEntryLocalService;
-
-	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
@@ -4636,10 +4606,6 @@ public class ObjectEntryLocalServiceImpl
 
 	@Reference
 	private ObjectStateLocalService _objectStateLocalService;
-
-	@Reference
-	private PersistedModelLocalServiceRegistry
-		_persistedModelLocalServiceRegistry;
 
 	@Reference
 	private PortletFileRepository _portletFileRepository;

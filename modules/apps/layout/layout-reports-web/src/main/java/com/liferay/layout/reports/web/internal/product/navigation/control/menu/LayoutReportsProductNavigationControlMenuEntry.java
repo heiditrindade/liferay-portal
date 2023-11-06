@@ -26,13 +26,11 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -395,12 +393,6 @@ public class LayoutReportsProductNavigationControlMenuEntry
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutReportsProductNavigationControlMenuEntry.class);
-
-	@Reference
-	private GroupLocalService _groupLocalService;
-
-	@Reference
-	private Html _html;
 
 	@Reference
 	private Language _language;

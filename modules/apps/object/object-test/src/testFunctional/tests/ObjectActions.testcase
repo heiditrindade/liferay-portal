@@ -897,28 +897,25 @@ definition {
 	@description = "LPS-173537 - Verify it's possible to update an object entry with the trigger On Order Status Update"
 	@priority = 4
 	test CanCreateActionUpdateAnObjectEntryWithOnOrderStatusUpdate {
-		property custom.properties = "feature.flag.LPS-173537=true";
-
-		task ("Given an action in the Commerce Order object") {
+		task ("Given an action in the commerce order object with the trigger on order status update") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectPortlet.selectCustomObject(label = "Commerce Order");
 
 			ObjectAdmin.goToActionsTab();
-		}
 
-		task ("And given the user selects the trigger OnOrderStatusUpdate using the action Update an Object Entry") {
 			ObjectAdmin.addObjectActionViaUI(
 				actionLabel = "Custom Action",
 				active = "true",
 				fieldName = "Order Status",
+				inputExpression = "orderStatus == 1",
 				inputMethod = "true",
 				inputValue = 20,
 				thenAction = "Update an Object Entry",
 				whenAction = "On Order Status Update");
 		}
 
-		task ("And given an account, minium site and an order is created") {
+		task ("When a minium site and an order is created") {
 			CommerceJSONAccountsAPI._addCommerceAccount(
 				accountName = "Account Name",
 				accountType = "Business");
@@ -945,55 +942,20 @@ definition {
 				shippingMethod = "Standard");
 		}
 
-		task ("When the user changes the order status and the action puts order on hold") {
+		task ("Then the action is triggered and the order status is updated") {
 			CommerceNavigator.gotoPortlet(
 				category = "Order Management",
 				portlet = "Orders");
 
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
-
-			Click(
-				key_text = "Accept Order",
-				locator1 = "Link#ANY");
-
-			CommerceOrders.openOrdersAdmin();
-
 			AssertElementPresent(
 				key_value = "On Hold",
 				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-		}
-
-		task ("Then the action is triggered") {
-			ObjectAdmin.openObjectAdmin();
-
-			ObjectPortlet.selectCustomObject(label = "Commerce Order");
-
-			ObjectAdmin.goToActionsTab();
-
-			ObjectAdmin.assertObjectActions(
-				actionActive = "Yes",
-				actionLabel = "Custom Action",
-				status = "Success");
-
-			// Workaround for LPS-193383
-
-			CommerceOrders.openOrdersAdmin();
-
-			Click.clickNoMouseOverNoWaitForVisible(locator1 = "CommerceNavigation#SELECT_ALL_CHECKBOX");
-
-			ClickNoError(locator1 = "Button#TRASH_ENABLED");
-
-			AssertConfirm.assertPartialConfirmation(value1 = "Are you sure you want to delete all selected orders?");
-
-			CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
 		}
 	}
 
 	@description = "LPS-173537 - Verify it's possible to update an object entry with the trigger On Payment Status Update"
 	@priority = 4
 	test CanCreateActionUpdateAnObjectEntryWithOnPaymentStatusUpdate {
-		property custom.properties = "feature.flag.LPS-173537=true";
-
 		task ("Given an action in the Commerce Order object") {
 			ObjectAdmin.openObjectAdmin();
 

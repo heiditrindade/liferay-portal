@@ -30,6 +30,12 @@ type DefinitionActions = {
 	update: DefinitionAction;
 };
 
+type DeletionNotAllowedModal = {
+	deleteLastPublishedObjectDefinitionObjectField: boolean;
+	deleteObjectFieldObjectValidationRuleSetting: boolean;
+	showModal: boolean;
+};
+
 type ExcludesFilterOperator = {
 	not: {
 		in: string[] | number[];
@@ -231,7 +237,7 @@ interface ObjectField {
 	DBType: string;
 	businessType: ObjectFieldBusinessType;
 	defaultValue?: string;
-	externalReferenceCode?: string;
+	externalReferenceCode: string;
 	id: number;
 	indexed: boolean;
 	indexedAsKeyword: boolean;
@@ -254,6 +260,7 @@ interface ObjectField {
 type ObjectFieldBusinessType =
 	| 'Aggregation'
 	| 'Attachment'
+	| 'AutoIncrement'
 	| 'Date'
 	| 'DateTime'
 	| 'Decimal'
@@ -314,17 +321,20 @@ type ObjectFieldSettingName =
 	| 'fileSource'
 	| 'filters'
 	| 'function'
+	| 'initialValue'
 	| 'maxLength'
 	| 'maximumFileSize'
 	| 'objectDefinition1ShortName'
 	| 'objectFieldName'
 	| 'objectRelationshipName'
 	| 'output'
+	| 'prefix'
 	| 'script'
 	| 'showCounter'
 	| 'showFilesInDocumentsAndMedia'
 	| 'stateFlow'
 	| 'storageDLFolderPath'
+	| 'suffix'
 	| 'timeStorage'
 	| 'uniqueValues'
 	| 'uniqueValuesErrorMessage';
@@ -404,13 +414,17 @@ interface ObjectValidation {
 	id: number;
 	lineCount?: number;
 	name: LocalizedValue<string>;
-	objectValidationRuleSettings?: {
-		name: 'outputObjectFieldExternalReferenceCode';
-		value: string;
-	}[];
+	objectValidationRuleSettings?: ObjectValidationRuleSetting[];
 	outputType?: string;
 	script: string;
 	system?: boolean;
+}
+
+interface ObjectValidationRuleSetting {
+	name:
+		| 'compositeKeyObjectFieldExternalReferenceCode'
+		| 'outputObjectFieldExternalReferenceCode';
+	value: string;
 }
 
 type ObjectWebLearnResources = {
@@ -441,11 +455,6 @@ interface PickList {
 	name: string;
 	name_i18n: LocalizedValue<string>;
 }
-
-type ObjectValidationType = {
-	label: string;
-	name: string;
-};
 
 interface PredefinedValue {
 	businessType: ObjectFieldBusinessType;

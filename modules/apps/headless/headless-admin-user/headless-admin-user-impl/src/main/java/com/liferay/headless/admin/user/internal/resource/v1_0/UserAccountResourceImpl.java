@@ -56,8 +56,6 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.auth.Authenticator;
-import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManager;
-import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.kernel.security.ldap.LDAPSettingsUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -82,12 +80,14 @@ import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.util.DTOConverterUtil;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -321,8 +321,8 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	)
 	@Override
 	public Page<UserAccount> getOrganizationUserAccountsPage(
-			String organizationId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			@NestedFieldId(value = "id") String organizationId, String search,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return _getUserAccountsPage(
@@ -1358,7 +1358,7 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 				login = String.valueOf(user.getUserId());
 			}
 
-			_authenticatedSessionManager.login(
+			AuthenticatedSessionManagerUtil.login(
 				contextHttpServletRequest, contextHttpServletResponse, login,
 				password, false, null);
 		}
@@ -1393,9 +1393,6 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 	@Reference
 	private AnnouncementsDeliveryLocalService
 		_announcementsDeliveryLocalService;
-
-	@Reference
-	private AuthenticatedSessionManager _authenticatedSessionManager;
 
 	@Reference
 	private CaptchaSettings _captchaSettings;

@@ -14,12 +14,15 @@ import com.liferay.jethr0.event.controller.EventJmsController;
 import com.liferay.jethr0.jenkins.node.JenkinsNodeEntity;
 import com.liferay.jethr0.jenkins.repository.JenkinsServerEntityRepository;
 import com.liferay.jethr0.jenkins.server.JenkinsServerEntity;
+import com.liferay.jethr0.util.StringUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+
+import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -48,7 +51,8 @@ public class JenkinsQueue {
 	@Scheduled(cron = "${liferay.jethr0.jenkins.queue.update.cron}")
 	public void scheduledUpdate() {
 		if (_log.isInfoEnabled()) {
-			_log.info("Updating Jenkins queue");
+			_log.info(
+				"Updating Jenkins queue at " + StringUtil.toString(new Date()));
 		}
 
 		update();
@@ -90,10 +94,12 @@ public class JenkinsQueue {
 					_buildRunEntityRepository.create(
 						buildEntity, BuildRunEntity.State.QUEUED);
 
-				_eventJmsController.send(
-					jenkinsServerEntity,
+				_eventJmsController.sendToJenkins(
 					String.valueOf(
-						buildRunEntity.getInvokeJSONObject(jenkinsNodeEntity)));
+						buildRunEntity.getInvokeJSONObject(jenkinsNodeEntity)),
+					HashMapBuilder.put(
+						"jenkinsMasterName", jenkinsServerEntity.getName()
+					).build());
 
 				_buildEntityRepository.update(buildEntity);
 				_buildRunEntityRepository.update(buildRunEntity);
@@ -117,8 +123,5 @@ public class JenkinsQueue {
 
 	@Autowired
 	private JenkinsServerEntityRepository _jenkinsServerEntityRepository;
-
-	@Value("${jenkins.server.urls}")
-	private String _jenkinsServerURLs;
 
 }

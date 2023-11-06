@@ -5,6 +5,9 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Michael Hashimoto
  */
@@ -13,6 +16,10 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	@Override
 	public Build getBuild() {
 		return _build;
+	}
+
+	@Override
+	public void reset() {
 	}
 
 	@Override
@@ -70,15 +77,19 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return;
 		}
 
+		if (!_build.hasMaximumInvocationCount()) {
+			_build.setStatus("starting");
+
+			_build.reset();
+
+			return;
+		}
+
 		runReporting();
 	}
 
 	protected void runQueued() {
 		_build.setStatus("queued");
-
-		if (isBuildQueued()) {
-			return;
-		}
 
 		if (isBuildRunning()) {
 			runRunning();
@@ -86,22 +97,22 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return;
 		}
 
-		_build.setStatus("missing");
+		if (!isBuildQueued()) {
+			_build.setStatus("missing");
+		}
 	}
 
 	protected void runReporting() {
 		_build.setStatus("reporting");
 
-		if (!isBuildCompleted()) {
-			return;
-		}
+		if (isBuildFailing()) {
+			_isApplySlaveOfflineRules();
 
-		_isApplySlaveOfflineRules();
+			if (_isApplyReinvokeRules()) {
+				_build.setStatus("queued");
 
-		if (_isApplyReinvokeRules()) {
-			_build.setStatus("starting");
-
-			return;
+				return;
+			}
 		}
 
 		runCompleted();
@@ -119,8 +130,6 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 
 	protected void runStarting() {
 		_build.setStatus("starting");
-
-		_build.reset();
 
 		Build.Invocation previousInvocation = _build.getPreviousInvocation();
 
@@ -141,9 +150,8 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return false;
 		}
 
-		if ((build.isCompleted() && !build.isFailing()) ||
-			!build.isCompleted() || build.isFromArchive() ||
-			build.hasMaximumInvocationCount()) {
+		if ((isBuildCompleted() && !isBuildFailing()) || !isBuildCompleted() ||
+			build.isFromArchive() || build.hasMaximumInvocationCount()) {
 
 			return false;
 		}
@@ -168,8 +176,8 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return false;
 		}
 
-		if ((build.isCompleted() && !build.isFailing()) ||
-			!build.isCompleted() || build.isFromArchive()) {
+		if ((isBuildCompleted() && !isBuildFailing()) || !isBuildCompleted() ||
+			build.isFromArchive()) {
 
 			return false;
 		}
@@ -186,9 +194,10 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return false;
 		}
 
-		for (SlaveOfflineRule slaveOfflineRule :
-				SlaveOfflineRule.getSlaveOfflineRules()) {
+		List<SlaveOfflineRule> slaveOfflineRules = new ArrayList<>(
+			SlaveOfflineRule.getSlaveOfflineRules());
 
+		for (SlaveOfflineRule slaveOfflineRule : slaveOfflineRules) {
 			if (!slaveOfflineRule.matches(build)) {
 				continue;
 			}

@@ -1,7 +1,7 @@
 @component-name = "portal-frontend-infrastructure"
 definition {
 
-	property custom.properties = "feature.flag.LPS-164563=true${line.separator}feature.flag.LPS-167253=true";
+	property custom.properties = "feature.flag.LPS-164563=true";
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -1025,9 +1025,9 @@ definition {
 			SelectFrameTop();
 
 			AssertAttributeValue(
-				attribute1 = "title",
 				locator1 = "DataSet#SELECT_DATA_SET_VIEW",
-				value1 = "Full countries View");
+				value1 = "title",
+				value2 = "Full countries View");
 		}
 	}
 

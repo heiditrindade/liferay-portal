@@ -261,6 +261,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>SIDEBAR_ITEM</td>
+		<td>//*[contains(@class,'list-group-item')][*[normalize-space(text())='${folderLabel}']]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>OBJECT_DETAILS_TAB</td>
 		<td>//*[contains(@class,'nav-link')]//span[contains(text(), 'Details')]</td>
 		<td></td>
@@ -403,6 +408,11 @@
 	<tr>
 		<td>FIELDS_TYPE_COLUMN</td>
 		<td>//div[contains(@class,'dnd-th') and contains(text(),'Type')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>FOLDER_LABEL</td>
+		<td>//span[contains(@class,'view-object-definitions-title') and contains(text(),'${folderLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>

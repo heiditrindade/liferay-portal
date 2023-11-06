@@ -1473,6 +1473,48 @@ public class JenkinsResultsParserUtil {
 		return Arrays.asList(propertyContent.split(","));
 	}
 
+	public static String getBuildURL(
+		String jenkinsJobName, JenkinsMaster jenkinsMaster,
+		long jenkinsQueueId) {
+
+		if (isNullOrEmpty(jenkinsJobName) || (jenkinsMaster == null) ||
+			(jenkinsQueueId < 0)) {
+
+			return null;
+		}
+
+		Class<?> clazz = JenkinsResultsParserUtil.class;
+
+		String script;
+
+		try {
+			script = readInputStream(
+				clazz.getResourceAsStream("dependencies/get-build-url.groovy"));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to load groovy script", ioException);
+		}
+
+		script = script.replace("${jenkinsJobName}", jenkinsJobName);
+		script = script.replace(
+			"${jenkinsQueueId}", String.valueOf(jenkinsQueueId));
+
+		try {
+			String response = executeJenkinsScript(
+				jenkinsMaster.getName(), script, true);
+
+			if (isURL(response)) {
+				return response;
+			}
+
+			return null;
+		}
+		catch (Exception exception) {
+			return null;
+		}
+	}
+
 	public static String getBuildURLByBuildID(String buildID) {
 		Matcher matcher = _buildIDPattern.matcher(buildID);
 
@@ -1701,6 +1743,25 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return System.currentTimeMillis() - _currentTimeMillisDelta;
+	}
+
+	public static String[] getDateStrings(long startTime, long duration) {
+		long durationDays = TimeUnit.MILLISECONDS.toDays(duration);
+
+		String[] dateStrings = new String[(int)durationDays];
+
+		LocalDate localDate = getLocalDate(startTime);
+
+		for (int i = 0; i < durationDays; i++) {
+			String dateString = localDate.format(
+				DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+			dateStrings[i] = dateString;
+
+			localDate = localDate.plusDays(1);
+		}
+
+		return dateStrings;
 	}
 
 	public static List<File> getDirectoriesContainingFiles(
@@ -2041,6 +2102,24 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return globs.toArray(new String[0]);
+	}
+
+	public static String getHeadersString(URLConnection urlConnection) {
+		Map<String, List<String>> headersMap = urlConnection.getHeaderFields();
+
+		StringBuilder sb = new StringBuilder();
+
+		for (Map.Entry<String, List<String>> entry : headersMap.entrySet()) {
+			sb.append(entry.getKey());
+			sb.append(": ");
+
+			sb.append(join(", ", entry.getValue()));
+			sb.append("\n");
+		}
+
+		sb.append("\n");
+
+		return sb.toString();
 	}
 
 	public static String getHostIPAddress() {
@@ -2530,6 +2609,14 @@ public class JenkinsResultsParserUtil {
 		return zonedDateTime.toLocalDate();
 	}
 
+	public static LocalDate getLocalDate(long milliseconds) {
+		Instant instant = Instant.ofEpochMilli(milliseconds);
+
+		ZonedDateTime zonedDateTime = instant.atZone(ZoneId.systemDefault());
+
+		return zonedDateTime.toLocalDate();
+	}
+
 	public static LocalDateTime getLocalDateTime(Date date) {
 		Instant instant = date.toInstant();
 
@@ -2626,6 +2713,15 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return localURL + localURLQueryString;
+	}
+
+	public static long getMillis(LocalDateTime localDateTime) {
+		ZonedDateTime zonedDateTime = ZonedDateTime.of(
+			localDateTime, ZoneId.systemDefault());
+
+		Instant instant = zonedDateTime.toInstant();
+
+		return instant.toEpochMilli();
 	}
 
 	public static JenkinsMaster getMostAvailableJenkinsMaster(
@@ -3173,6 +3269,21 @@ public class JenkinsResultsParserUtil {
 		}
 	}
 
+	public static String getResponseHeaders(URLConnection urlConnection) {
+		StringBuilder sb = new StringBuilder();
+
+		Map<String, List<String>> map = urlConnection.getHeaderFields();
+
+		for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+			sb.append(entry.getKey());
+			sb.append(":");
+			sb.append(join(",", entry.getValue()));
+			sb.append("\n");
+		}
+
+		return sb.toString();
+	}
+
 	public static List<String> getSlaves(
 		Properties buildProperties, String jenkinsMasterPatternString) {
 
@@ -3303,15 +3414,23 @@ public class JenkinsResultsParserUtil {
 		JenkinsMaster jenkinsMaster, String jenkinsJobName,
 		Map<String, String> buildParameters) {
 
+		Class<?> clazz = JenkinsResultsParserUtil.class;
+
+		String script;
+
+		try {
+			script = readInputStream(
+				clazz.getResourceAsStream(
+					"dependencies/invoke-jenkins-build.groovy"));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to load groovy script", ioException);
+		}
+
+		script = script.replace("${jenkinsJobName}", jenkinsJobName);
+
 		StringBuilder sb = new StringBuilder();
-
-		sb.append("import org.jvnet.jenkins.plugins.nodelabelparameter.");
-		sb.append("LabelParameterDefinition;\n");
-
-		sb.append("import org.jvnet.jenkins.plugins.nodelabelparameter.");
-		sb.append("LabelParameterValue;\n");
-
-		sb.append("Map<String, String> parameters = new HashMap<>();\n");
 
 		for (Map.Entry<String, String> buildParameter :
 				buildParameters.entrySet()) {
@@ -3323,83 +3442,11 @@ public class JenkinsResultsParserUtil {
 			sb.append("\");\n");
 		}
 
-		sb.append("Map<String, TopLevelItem> topLevelItems = ");
-		sb.append("Jenkins.instance.getItemMap();\n");
-
-		sb.append("TopLevelItem topLevelItem = topLevelItems.get(\"");
-		sb.append(jenkinsJobName);
-		sb.append("\");\n");
-
-		sb.append(
-			"List<ParameterValue> parameterValues = new ArrayList<>();\n");
-
-		sb.append("JobProperty jobProperty = topLevelItem.getProperty(");
-		sb.append("\"hudson.model.ParametersDefinitionProperty\");\n");
-
-		sb.append("for (ParameterDefinition parameterDefinition : ");
-		sb.append("jobProperty.getParameterDefinitions()) {\n");
-
-		sb.append("String parameterName = parameterDefinition.getName();\n");
-
-		sb.append("String parameterValue = parameters.get(parameterName);\n");
-
-		sb.append(
-			"if ((parameterValue == null) || parameterValue.isEmpty()) {\n");
-		sb.append("parameterValue = parameterDefinition.defaultValue;\n");
-		sb.append("}\n");
-
-		sb.append("if (parameterDefinition instanceof ");
-		sb.append("StringParameterDefinition) {\n");
-
-		sb.append("parameterValues.add(");
-		sb.append(
-			"new StringParameterValue(parameterName, parameterValue));\n");
-
-		sb.append("}\n");
-
-		sb.append("else if (parameterDefinition instanceof ");
-		sb.append("LabelParameterDefinition) {\n");
-
-		sb.append("parameterValues.add(");
-		sb.append("new LabelParameterValue(parameterName, parameterValue));\n");
-
-		sb.append("}\n");
-
-		sb.append("}\n");
-
-		sb.append("def waitingItem = Jenkins.instance.queue.schedule(");
-		sb.append("topLevelItem, 0, new ParametersAction(parameterValues));\n");
-
-		sb.append("if (waitingItem == null) {\n");
-
-		sb.append(
-			"for (Queue.Item item : Jenkins.instance.queue.getItems()) {\n");
-
-		sb.append("if (waitingItem != null) {break;}\n");
-
-		sb.append("for (Action action : item.getActions()) {\n");
-
-		sb.append("if (!(action instanceof ParametersAction)) ");
-		sb.append("{continue;}\n");
-
-		sb.append("if (!parameterValues.equals(action.getAllParameters())) ");
-		sb.append("{continue;}\n");
-
-		sb.append("waitingItem = item;\n");
-
-		sb.append("break;\n");
-
-		sb.append("}\n}\n}\n");
-
-		sb.append("def jsonBuilder = new groovy.json.JsonBuilder()\n");
-
-		sb.append("jsonBuilder queueId: waitingItem.getId()\n");
-
-		sb.append("println(jsonBuilder);");
+		script = script.replace("${parameters}", sb.toString());
 
 		try {
 			String response = executeJenkinsScript(
-				jenkinsMaster.getName(), sb.toString(), true);
+				jenkinsMaster.getName(), script, true);
 
 			return new JSONObject(response);
 		}
@@ -4063,6 +4110,10 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static String redact(String string) {
+		if (isNullOrEmpty(string)) {
+			return string;
+		}
+
 		if (_redactTokens.isEmpty()) {
 			synchronized (_redactTokens) {
 				_initializeRedactTokens();
@@ -4422,16 +4473,35 @@ public class JenkinsResultsParserUtil {
 			}
 		}
 
+		boolean gitHubAPICall = false;
 		int retryCount = 0;
 
 		while (true) {
+			URLConnection urlConnection = null;
+
 			try {
 				if (debug) {
 					System.out.println("Downloading " + url);
 				}
 
+				Matcher matcher = _gitHubAPIURLPattern.matcher(url);
+
+				if (matcher.matches()) {
+					gitHubAPICall = true;
+
+					if (_updatingHttpRequestMethods.contains(
+							httpRequestMethod)) {
+
+						Properties buildProperties = getBuildProperties();
+
+						url =
+							buildProperties.getProperty("github.api.proxy") +
+								matcher.group(1);
+					}
+				}
+
 				if ((httpAuthorizationHeader == null) &&
-					(url.startsWith("https://api.github.com") ||
+					(gitHubAPICall ||
 					 url.startsWith(
 						 "https://raw.githubusercontent.com/liferay/"))) {
 
@@ -4507,7 +4577,7 @@ public class JenkinsResultsParserUtil {
 
 				URL urlObject = new URL(url);
 
-				URLConnection urlConnection = urlObject.openConnection();
+				urlConnection = urlObject.openConnection();
 
 				if (urlConnection instanceof HttpURLConnection) {
 					HttpURLConnection httpURLConnection =
@@ -4524,7 +4594,7 @@ public class JenkinsResultsParserUtil {
 							httpRequestMethod.name());
 					}
 
-					if (url.startsWith("https://api.github.com") &&
+					if (gitHubAPICall &&
 						(httpURLConnection instanceof HttpsURLConnection)) {
 
 						SSLContext sslContext = null;
@@ -4596,7 +4666,7 @@ public class JenkinsResultsParserUtil {
 
 				urlConnection.connect();
 
-				if (url.startsWith("https://api.github.com")) {
+				if (gitHubAPICall) {
 					try {
 						int limit = Integer.parseInt(
 							urlConnection.getHeaderField("X-RateLimit-Limit"));
@@ -4636,16 +4706,79 @@ public class JenkinsResultsParserUtil {
 						retryPeriod, timeout, httpAuthorizationHeader);
 				}
 
-				retryCount++;
+				String exceptionMessage = ioException.getMessage();
+
+				if (exceptionMessage.matches(
+						".*HTTP response code\\: 422 .*") &&
+					(urlConnection != null)) {
+
+					StringBuilder sb = new StringBuilder();
+
+					sb.append(exceptionMessage);
+					sb.append("\n");
+
+					if (!isNullOrEmpty(postContent)) {
+						sb.append("Post content:\n");
+						sb.append(postContent);
+					}
+
+					System.out.println(sb.toString());
+
+					throw new RuntimeException(exceptionMessage, ioException);
+				}
+
+				Integer retryPeriodOverride = null;
+
+				if (exceptionMessage.matches(
+						".*HTTP response code\\: 403 .*") &&
+					(urlConnection != null)) {
+
+					try {
+						retryPeriodOverride = Integer.parseInt(
+							urlConnection.getHeaderField("retry-after"));
+					}
+					catch (NumberFormatException numberFormatException) {
+						retryPeriodOverride = null;
+					}
+
+					if ((retryPeriodOverride == null) ||
+						(retryPeriodOverride == 0)) {
+
+						retryPeriodOverride = retryPeriod;
+
+						for (int i = 0; i < retryCount; i++) {
+							retryPeriodOverride *= retryPeriodOverride;
+						}
+					}
+
+					if (((maxRetries >= 0) && (retryCount >= maxRetries)) ||
+						(retryPeriodOverride > _SECONDS_RETRY_PERIOD_MAX)) {
+
+						throw new GitHubSecondaryRateLimitRuntimeException(
+							url, retryPeriodOverride, ioException);
+					}
+				}
+
+				long retryPeriodMillis = 1000 * retryPeriod;
+
+				if ((retryPeriodOverride != null) &&
+					(retryPeriodOverride > 0)) {
+
+					retryPeriodMillis = 1000 * retryPeriodOverride;
+				}
 
 				if ((maxRetries >= 0) && (retryCount >= maxRetries)) {
 					throw ioException;
 				}
 
 				System.out.println(
-					"Retrying " + url + " in " + retryPeriod + " seconds");
+					combine(
+						"Retrying ", url, " in ",
+						toDurationString(retryPeriodMillis)));
 
-				sleep(1000 * retryPeriod);
+				retryCount++;
+
+				sleep(retryPeriodMillis);
 			}
 		}
 	}
@@ -6332,6 +6465,8 @@ public class JenkinsResultsParserUtil {
 
 	private static final int _SECONDS_RETRY_PERIOD_DEFAULT = 5;
 
+	private static final int _SECONDS_RETRY_PERIOD_MAX = 60 * 30;
+
 	private static final String _URL_LOAD_BALANCER =
 		"http://cloud-10-0-0-31.lax.liferay.com/osb-jenkins-web/load_balancer";
 
@@ -6359,6 +6494,8 @@ public class JenkinsResultsParserUtil {
 	private static final List<String> _forbiddenRedactTokens = Arrays.asList(
 		"test");
 	private static JSONArray _gitDirectoriesJSONArray;
+	private static final Pattern _gitHubAPIURLPattern = Pattern.compile(
+		"https\\:\\/\\/api\\.github\\.com(.*)");
 	private static final DateFormat _gitHubDateFormat = new SimpleDateFormat(
 		"yyyy-MM-dd'T'HH:mm:ss");
 	private static JSONArray _gitWorkingDirectoriesJSONArray;
@@ -6407,6 +6544,10 @@ public class JenkinsResultsParserUtil {
 	};
 
 	private static final Set<String> _timeStamps = new HashSet<>();
+	private static final List<HttpRequestMethod> _updatingHttpRequestMethods =
+		Arrays.asList(
+			HttpRequestMethod.POST, HttpRequestMethod.PATCH,
+			HttpRequestMethod.PUT, HttpRequestMethod.DELETE);
 	private static final Pattern _urlQueryStringPattern = Pattern.compile(
 		"\\&??(\\w++)=([^\\&]*)");
 	private static final File _userHomeDir = new File(

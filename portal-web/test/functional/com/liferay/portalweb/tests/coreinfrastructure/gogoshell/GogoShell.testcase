@@ -42,7 +42,7 @@ definition {
 
 		GogoShell.executeCommand(commandName = "system:check");
 
-		for (var outputContent : list "Declarative Service Soft Circular Dependency System Checker check result: No issues were found,Declarative Service Unsatisfied Component Checker check result: No issues were found,Spring Extender Unavailable Component System Checker check result: No issues were found") {
+		for (var outputContent : list "Declarative Service Soft Circular Dependency System Checker check result: No issues were found,Declarative Service Unsatisfied Component System Checker check result: No issues were found,Spring Extender Unavailable Component System Checker check result: No issues were found") {
 			GogoShell.viewOutput(outputContent = ${outputContent});
 		}
 	}
@@ -155,6 +155,10 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 		User.openUsersAdmin();
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
@@ -162,6 +166,10 @@ definition {
 		User.editUserSiteCP(
 			siteName = ${siteName},
 			userScreenName = "usersn");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		Site.openSiteMembershipsAdmin(siteURLKey = "guest");
 

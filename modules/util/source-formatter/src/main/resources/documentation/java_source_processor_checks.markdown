@@ -162,11 +162,9 @@ JavaTransactionBoundaryCheck | [Bug Prevention](bug_prevention_checks.markdown#b
 [JavaUnusedSourceFormatterChecksCheck](check/java_unused_source_formatter_checks_check.markdown#javaunusedsourceformattercheckscheck) | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | Finds `*Check` classes that are not configured. |
 [JavaUpgradeAlterCheck](check/java_upgrade_alter_check.markdown#javaupgradealtercheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on `alter` calls in Upgrade classes. |
 [JavaUpgradeClassCheck](check/java_upgrade_class_check.markdown#javaupgradeclasscheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Performs several checks on Upgrade classes. |
-JavaUpgradeCommerceShippingOptionCheck | [Upgrade](upgrade_checks.markdown#upgrade-checks) | Replace and reorder parameters in the CommerceShippingOption instance. |
 JavaUpgradeConnectionCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases where `DataAccess.getConnection` is used (instead of using the available global variable `connection`). |
 [JavaUpgradeDropTableCheck](check/java_upgrade_drop_table_check.markdown#javaupgradedroptablecheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases where `DROP_TABLE_IF_EXISTS` should be used (instead of `drop table if exists`). |
 JavaUpgradeEmptyLinesCheck | [Styling](styling_checks.markdown#styling-checks) | Finds missing and unnecessary empty lines in Upgrade classes. |
-JavaUpgradeFetchCPDefinitionByCProductExternalReferenceCodeCheck | [Upgrade](upgrade_checks.markdown#upgrade-checks) | Reorder parameters in the fetchCPDefinitionByCProductExternalReferenceCode method |
 [JavaUpgradeIndexCheck](check/java_upgrade_index_check.markdown#javaupgradeindexcheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases where the service builder indexes are updated manually in Upgrade classes. This is not needed because Liferay takes care of it. |
 JavaUpgradeModelPermissionsCheck | [Upgrade](upgrade_checks.markdown#upgrade-checks) | Replace setGroupPermissions and setGuestPermissions by new implementation |
 JavaUpgradeProcessFactoryCheck | [Styling](styling_checks.markdown#styling-checks) | Sorts and groups method calls. |
@@ -214,6 +212,7 @@ NestedIfStatementCheck | [Styling](styling_checks.markdown#styling-checks) | Fin
 NotRequireThisCheck | [Styling](styling_checks.markdown#styling-checks) | Finds cases of unnecessary use of `this.`. |
 [NullAssertionInIfStatementCheck](check/null_assertion_in_if_statement_check.markdown#nullassertioninifstatementcheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Verifies that null check should always be first in if-statement. |
 NumberSuffixCheck | [Styling](styling_checks.markdown#styling-checks) | Verifies that uppercase `D`, `F`, or `L` is used when denoting Double/Float/Long. |
+OSGiCommandsCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Perform several checks on `*OSGiCommands` classes |
 [OSGiResourceBuilderCheck](check/osgi_resource_builder_check.markdown#osgiresourcebuildercheck) | [Styling](styling_checks.markdown#styling-checks) | Avoid using *Resource.builder. |
 [OneStatementPerLineCheck](https://checkstyle.sourceforge.io/config_coding.html#OneStatementPerLine) | [Styling](styling_checks.markdown#styling-checks) | Checks that there is only one statement per line. |
 OperatorOperandCheck | [Styling](styling_checks.markdown#styling-checks) | Verifies that operand do not go over too many lines and make the operator hard to read. |

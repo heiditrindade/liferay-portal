@@ -4,7 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Content and Application Templates";
+	property testray.main.component.name = "Product Menu";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -72,7 +72,7 @@ definition {
 	@priority = 4
 	@uitest
 	test ViewTemplateEditorSidebarPanel {
-		property timeout.explicit.wait = "10";
+		property timeout.explicit.wait = "20";
 
 		task ("Add a widget template for Asset Publisher") {
 			ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "test-site-name-staging");

@@ -5,16 +5,15 @@
 
 package com.liferay.document.library.preview.pdf.internal;
 
+import com.liferay.document.library.configuration.DLFileEntryConfigurationProvider;
 import com.liferay.document.library.kernel.document.conversion.DocumentConversion;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLProcessorConstants;
 import com.liferay.document.library.kernel.store.Store;
-import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
 import com.liferay.document.library.kernel.util.DLProcessor;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.kernel.util.PDFProcessor;
 import com.liferay.document.library.preview.pdf.internal.background.task.PDFPreviewBackgroundTaskExecutor;
-import com.liferay.document.library.preview.pdf.internal.configuration.admin.service.helper.PDFPreviewConfigurationHelper;
 import com.liferay.document.library.preview.pdf.internal.util.ProcessConfigUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.image.Ghostscript;
@@ -24,7 +23,6 @@ import com.liferay.petra.process.ProcessException;
 import com.liferay.petra.process.ProcessExecutor;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskContextMapConstants;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -49,6 +47,7 @@ import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portlet.documentlibrary.util.DLPreviewableProcessor;
 
 import java.io.File;
 import java.io.IOException;
@@ -112,13 +111,10 @@ public class PDFProcessorImpl
 			FileVersion sourceFileVersion, FileVersion destinationFileVersion)
 		throws Exception {
 
-		int maxNumberOfPages =
-			_pdfPreviewConfigurationHelper.getMaxNumberOfPages(
-				ExtendedObjectClassDefinition.Scope.GROUP.getValue(),
-				destinationFileVersion.getGroupId());
-
 		_generateImages(
-			sourceFileVersion, destinationFileVersion, maxNumberOfPages);
+			sourceFileVersion, destinationFileVersion,
+			_dlFileEntryConfigurationProvider.getGroupMaxNumberOfPages(
+				destinationFileVersion.getGroupId()));
 	}
 
 	@Override
@@ -1108,6 +1104,9 @@ public class PDFProcessorImpl
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
+	private DLFileEntryConfigurationProvider _dlFileEntryConfigurationProvider;
+
+	@Reference
 	private DocumentConversion _documentConversion;
 
 	private final List<Long> _fileVersionIds = new Vector<>();
@@ -1119,9 +1118,6 @@ public class PDFProcessorImpl
 	private Ghostscript _ghostscript;
 
 	private boolean _ghostscriptInitialized;
-
-	@Reference
-	private PDFPreviewConfigurationHelper _pdfPreviewConfigurationHelper;
 
 	@Reference
 	private ProcessExecutor _processExecutor;

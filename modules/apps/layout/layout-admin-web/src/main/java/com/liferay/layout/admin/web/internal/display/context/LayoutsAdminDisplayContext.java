@@ -23,6 +23,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.VerticalNavItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.VerticalNavItemListBuilder;
+import com.liferay.frontend.taglib.servlet.taglib.constants.ScreenNavigationWebKeys;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
@@ -397,6 +398,8 @@ public class LayoutsAdminDisplayContext {
 				return portletDisplay.getId();
 			}
 		).setParameter(
+			"backURLTitle", LanguageUtil.get(httpServletRequest, "pages")
+		).setParameter(
 			"groupId", layout.getGroupId()
 		).setParameter(
 			"privateLayout", layout.isPrivateLayout()
@@ -728,8 +731,8 @@ public class LayoutsAdminDisplayContext {
 	}
 
 	public PortletURL getLayoutScreenNavigationPortletURL(long plid) {
-		return PortletURLBuilder.create(
-			getPortletURL()
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
 		).setMVCRenderCommandName(
 			"/layout_admin/edit_layout"
 		).setBackURL(
@@ -737,13 +740,21 @@ public class LayoutsAdminDisplayContext {
 		).setPortletResource(
 			ParamUtil.getString(httpServletRequest, "portletResource")
 		).setParameter(
+			"backURLTitle",
+			() -> {
+				PortletDisplay portletDisplay =
+					themeDisplay.getPortletDisplay();
+
+				return portletDisplay.getURLBackTitle();
+			}
+		).setParameter(
 			"selPlid", plid
 		).buildPortletURL();
 	}
 
 	public PortletURL getLayoutSetScreenNavigationPortletURL() {
-		return PortletURLBuilder.create(
-			getPortletURL()
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
 		).setMVCRenderCommandName(
 			"/layout_admin/edit_layout_set"
 		).setBackURL(
@@ -1255,10 +1266,14 @@ public class LayoutsAdminDisplayContext {
 			_liferayPortletRequest, "selPlid", LayoutConstants.DEFAULT_PLID);
 
 		if ((_selPlid == 0) ||
-			!Objects.equals(
+			(!Objects.equals(
 				ParamUtil.getString(
 					httpServletRequest, "screenNavigationEntryKey"),
-				LayoutScreenNavigationEntryConstants.ENTRY_KEY_DESIGN)) {
+				LayoutScreenNavigationEntryConstants.ENTRY_KEY_DESIGN) &&
+			 !Objects.equals(
+				 httpServletRequest.getAttribute(
+					 ScreenNavigationWebKeys.SELECTED_ENTRY_KEY),
+				 LayoutScreenNavigationEntryConstants.ENTRY_KEY_DESIGN))) {
 
 			return _selPlid;
 		}
@@ -1564,11 +1579,10 @@ public class LayoutsAdminDisplayContext {
 		}
 
 		try {
-			PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
 			layoutFullURL = HttpComponentsUtil.addParameters(
 				layoutFullURL, "p_l_back_url", _getBackURL(),
-				"p_l_back_url_title", portletDisplay.getTitle());
+				"p_l_back_url_title",
+				LanguageUtil.get(httpServletRequest, "pages"));
 		}
 		catch (Exception exception) {
 			_log.error(
@@ -2154,12 +2168,11 @@ public class LayoutsAdminDisplayContext {
 	}
 
 	private String _getDraftLayoutURL(Layout layout) throws Exception {
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
 		return HttpComponentsUtil.addParameters(
 			PortalUtil.getLayoutFullURL(getDraftLayout(layout), themeDisplay),
 			"p_l_back_url", _getBackURL(), "p_l_back_url_title",
-			portletDisplay.getPortletDisplayName(), "p_l_mode", Constants.EDIT);
+			LanguageUtil.get(httpServletRequest, "pages"), "p_l_mode",
+			Constants.EDIT);
 	}
 
 	private String _getFriendlyURLWarningURL() {

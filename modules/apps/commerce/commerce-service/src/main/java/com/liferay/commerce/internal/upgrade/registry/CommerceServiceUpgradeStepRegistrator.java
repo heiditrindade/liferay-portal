@@ -434,7 +434,8 @@ public class CommerceServiceUpgradeStepRegistrator
 
 		registry.register(
 			"8.4.1", "8.5.0",
-			new CommerceAddressTypeUpgradeProcess(_listTypeLocalService));
+			new CommerceAddressTypeUpgradeProcess(
+				_companyLocalService, _listTypeLocalService));
 
 		registry.register(
 			"8.5.0", "8.6.0",
@@ -652,6 +653,18 @@ public class CommerceServiceUpgradeStepRegistrator
 			UpgradeProcessFactory.alterColumnType(
 				CommerceShipmentItemModelImpl.TABLE_NAME, "quantity",
 				"BIGDECIMAL null"));
+
+		registry.register(
+			"11.2.0", "11.2.1",
+			new com.liferay.commerce.internal.upgrade.v11_2_1.
+				CommercePermissionUpgradeProcess(
+					_resourceActionLocalService,
+					_resourcePermissionLocalService));
+
+		registry.register(
+			"11.2.1", "11.3.0",
+			new com.liferay.commerce.internal.upgrade.v11_3_0.
+				CommerceOrderUpgradeProcess());
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce upgrade step registrator finished");

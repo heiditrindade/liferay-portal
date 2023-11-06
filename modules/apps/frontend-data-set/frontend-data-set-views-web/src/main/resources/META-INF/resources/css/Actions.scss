@@ -1,0 +1,21 @@
+@import 'atlas-variables';
+
+.panel-unstyled {
+	margin-bottom: 0;
+	padding: 1rem 1.5rem;
+
+	.panel-header {
+		&,
+		&.collapsed {
+			border-color: $gray-400;
+		}
+
+		&.panel-header-link {
+			border-radius: 0;
+		}
+	}
+
+	.tab-content.action-messages .tab-pane {
+		padding: 2rem 0;
+	}
+}

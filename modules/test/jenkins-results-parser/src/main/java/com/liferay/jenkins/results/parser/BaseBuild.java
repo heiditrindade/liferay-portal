@@ -532,22 +532,24 @@ public abstract class BaseBuild implements Build {
 		String result = getResult();
 
 		while (result == null) {
-			if (i == 20) {
-				throw new RuntimeException(
+			if (i == 2) {
+				System.out.println(
 					JenkinsResultsParserUtil.combine(
 						"Unable to create build anchor element. The process ",
 						"timed out while waiting for a build result for ",
 						getBuildURL(), "."));
+
+				break;
 			}
 
-			JenkinsResultsParserUtil.sleep(1000 * 30);
+			JenkinsResultsParserUtil.sleep(1000 * 5);
 
 			result = getResult();
 
 			i++;
 		}
 
-		if (result.equals("SUCCESS")) {
+		if (Objects.equals(result, "SUCCESS")) {
 			return Dom4JUtil.getNewAnchorElement(
 				getBuildURL(), getDisplayName());
 		}
@@ -980,6 +982,10 @@ public abstract class BaseBuild implements Build {
 		}
 
 		JSONObject buildJSONObject = getBuildJSONObject("result");
+
+		if (buildJSONObject == null) {
+			return "MISSING";
+		}
 
 		String result = buildJSONObject.optString("result");
 
@@ -1473,6 +1479,10 @@ public abstract class BaseBuild implements Build {
 		_jenkinsSlave = null;
 		_result = null;
 		_statusModifiedTime = 0;
+
+		if (_buildUpdater != null) {
+			_buildUpdater.reset();
+		}
 	}
 
 	@Override
@@ -1499,12 +1509,6 @@ public abstract class BaseBuild implements Build {
 	@Override
 	public void setBuildURL(String buildURL) {
 		_buildURL = buildURL;
-
-		Invocation currentInvocation = getCurrentInvocation();
-
-		if (currentInvocation != null) {
-			currentInvocation.setBuildURL(buildURL);
-		}
 	}
 
 	@Override
@@ -1920,8 +1924,6 @@ public abstract class BaseBuild implements Build {
 	protected BaseBuild(String url, Build parentBuild) {
 		_parentBuild = parentBuild;
 
-		_buildUpdater = BuildUpdaterFactory.newBuildUpdater(this);
-
 		if (url.contains("buildWithParameters")) {
 			_setInvocationURL(url);
 		}
@@ -1939,6 +1941,8 @@ public abstract class BaseBuild implements Build {
 				_archiveRootDir = new File(getBuildDirPath());
 			}
 		}
+
+		_buildUpdater = BuildUpdaterFactory.newBuildUpdater(this);
 
 		if (fromArchive || isFromCompletedBuild()) {
 			update();
@@ -1964,6 +1968,10 @@ public abstract class BaseBuild implements Build {
 
 	protected boolean archiveFileExists(String urlSuffix) {
 		File archiveFile = getArchiveFile(urlSuffix);
+
+		if (archiveFile == null) {
+			return false;
+		}
 
 		return archiveFile.exists();
 	}
@@ -2070,6 +2078,12 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected File getArchiveFile(String urlSuffix) {
+		JenkinsMaster jenkinsMaster = getJenkinsMaster();
+
+		if (jenkinsMaster == null) {
+			return null;
+		}
+
 		return new File(
 			getArchiveRootDir(), getArchivePath() + "/" + urlSuffix);
 	}
@@ -2081,7 +2095,7 @@ public abstract class BaseBuild implements Build {
 
 		File archiveFile = getArchiveFile(urlSuffix);
 
-		if (!archiveFile.exists()) {
+		if ((archiveFile == null) || !archiveFile.exists()) {
 			return null;
 		}
 
@@ -2203,6 +2217,8 @@ public abstract class BaseBuild implements Build {
 				Invocation previousInvocation = getPreviousInvocation();
 
 				if (previousInvocation != null) {
+					sb.append(" ");
+
 					sb.append(previousInvocation.getBuildURL());
 
 					sb.append(" restarted at ");
@@ -2952,6 +2968,12 @@ public abstract class BaseBuild implements Build {
 			}
 		}
 
+		JenkinsMaster jenkinsMaster = getJenkinsMaster();
+
+		if (jenkinsMaster == null) {
+			return;
+		}
+
 		File archiveFile = getArchiveFile(urlSuffix);
 
 		if (!readyToArchive) {
@@ -3277,13 +3299,11 @@ public abstract class BaseBuild implements Build {
 		JSONObject buildJSONObject = getBuildJSONObject("result,queueId,url");
 
 		Invocation invocation = new Invocation(
-			jenkinsMaster, buildJSONObject.getLong("queueId"));
+			this, jenkinsMaster, buildJSONObject.getLong("queueId"));
 
 		invocation.setBuildURL(buildJSONObject.getString("url"));
 
 		addInvocation(invocation);
-
-		setStatus("running");
 
 		String result = buildJSONObject.optString("result");
 
@@ -3292,6 +3312,9 @@ public abstract class BaseBuild implements Build {
 
 			setResult(result);
 			setStatus("completed");
+		}
+		else {
+			setStatus("running");
 		}
 	}
 

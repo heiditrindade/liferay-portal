@@ -8,6 +8,7 @@ package com.liferay.object.rest.internal.odata.filter.expression;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
+import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
@@ -630,17 +631,26 @@ public class PredicateExpressionVisitorImpl
 		EntityField.Type entityType = entityField.getType();
 
 		if (entityType.equals(EntityField.Type.DATE_TIME) &&
-			(DBManagerUtil.getDBType() == DBType.HYPERSONIC)) {
+			(Objects.equals(DBManagerUtil.getDBType(), DBType.HYPERSONIC) ||
+			 Objects.equals(DBManagerUtil.getDBType(), DBType.ORACLE))) {
+
+			String pattern = "dd-MMM-yyyy HH:mm:ss.SSS";
+
+			if (Objects.equals(DBManagerUtil.getDBType(), DBType.ORACLE)) {
+				pattern = "dd-MMM-yyyy hh:mm:ss.SSS a";
+			}
 
 			try {
 				Format format = FastDateFormatFactoryUtil.getSimpleDateFormat(
-					"dd-MMM-yyyy HH:mm:ss.SSS");
+					pattern);
+
+				String value = right.toString();
 
 				DateFormat dateFormat =
 					DateFormatFactoryUtil.getSimpleDateFormat(
-						"yyyy-MM-dd'T'HH:mm:ss");
+						ObjectFieldUtil.getDateTimePattern(value));
 
-				Date date = dateFormat.parse(right.toString());
+				Date date = dateFormat.parse(value);
 
 				right = format.format(date);
 			}

@@ -37,7 +37,7 @@ function copy_images {
 	# Include must come before exclude.
 	#
 
-	rsync --include="images/*" --include="*/" --exclude="*" --prune-empty-dirs --recursive ~/liferay-learn/docs /public_html/images
+	rsync --include="images/*" --include="*/" --exclude="*" --prune-empty-dirs --recursive ~/liferay-learn/docs/ /public_html/images
 }
 
 function generate_zip_files {
@@ -46,9 +46,9 @@ function generate_zip_files {
 		return
 	fi
 
-	pushd ~/liferay-learn > /dev/null
+	pushd ~/liferay-learn/docs > /dev/null
 
-	for zip_dir_name in $(find docs -name \*.zip -type d)
+	for zip_dir_name in $(find * -name \*.zip -type d)
 	do
 		pushd "${zip_dir_name}"
 

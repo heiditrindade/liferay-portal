@@ -9,7 +9,6 @@ import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.document.library.kernel.document.conversion.DocumentConversion;
 import com.liferay.document.library.kernel.model.DLProcessorConstants;
 import com.liferay.document.library.kernel.util.AudioProcessor;
-import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
 import com.liferay.document.library.kernel.util.DLProcessor;
 import com.liferay.document.library.kernel.util.PDFProcessor;
 import com.liferay.document.library.kernel.util.VideoProcessor;
@@ -65,7 +64,6 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicy;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicyFactory;
 import com.liferay.portal.kernel.security.membershippolicy.RoleMembershipPolicy;
-import com.liferay.portal.kernel.security.membershippolicy.RoleMembershipPolicyFactory;
 import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicy;
 import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyFactory;
 import com.liferay.portal.kernel.security.membershippolicy.UserGroupMembershipPolicy;
@@ -79,6 +77,7 @@ import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.servlet.DirectServletRegistryUtil;
+import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -101,11 +100,13 @@ import com.liferay.portal.kernel.util.UnsyncPrintWriterPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.log4j.Log4JUtil;
+import com.liferay.portal.security.membershippolicy.RoleMembershipPolicyFactoryUtil;
 import com.liferay.portal.util.MaintenanceUtil;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.ShutdownUtil;
+import com.liferay.portlet.documentlibrary.util.DLPreviewableProcessor;
 import com.liferay.server.admin.web.internal.constants.ImageMagickResourceLimitConstants;
-import com.liferay.server.admin.web.internal.scripting.ServerScripting;
+import com.liferay.server.admin.web.internal.scripting.util.ServerScriptingUtil;
 
 import java.lang.reflect.InvocationHandler;
 
@@ -149,6 +150,10 @@ public class EditServerMVCActionCommand
 	public void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
+
+		if (!StringUtil.equals(actionRequest.getMethod(), HttpMethods.POST)) {
+			return;
+		}
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -427,7 +432,7 @@ public class EditServerMVCActionCommand
 					}
 
 					_portletPreferencesLocalService.deletePortletPreferences(
-						portletPreferences);
+						portletPreferences.getPortletPreferencesId());
 				});
 
 			actionableDynamicQuery.performActions();
@@ -446,6 +451,19 @@ public class EditServerMVCActionCommand
 			ActionableDynamicQuery actionableDynamicQuery =
 				_portletPreferencesLocalService.getActionableDynamicQuery();
 
+			actionableDynamicQuery.setAddCriteriaMethod(
+				dynamicQuery -> {
+					Property plidProperty = PropertyFactoryUtil.forName("plid");
+
+					DynamicQuery layoutRevisionDynamicQuery =
+						_layoutRevisionLocalService.dynamicQuery();
+
+					layoutRevisionDynamicQuery.setProjection(
+						ProjectionFactoryUtil.property("layoutRevisionId"));
+
+					dynamicQuery.add(
+						plidProperty.notIn(layoutRevisionDynamicQuery));
+				});
 			actionableDynamicQuery.setParallel(true);
 			actionableDynamicQuery.setPerformActionMethod(
 				(com.liferay.portal.kernel.model.PortletPreferences pref) -> {
@@ -484,7 +502,8 @@ public class EditServerMVCActionCommand
 
 					if (orphan) {
 						_portletPreferencesLocalService.
-							deletePortletPreferences(pref);
+							deletePortletPreferences(
+								pref.getPortletPreferencesId());
 					}
 				});
 
@@ -611,7 +630,7 @@ public class EditServerMVCActionCommand
 			SessionMessages.add(actionRequest, "script", script);
 			SessionMessages.add(actionRequest, "output", output);
 
-			_serverScripting.execute(portletObjects, language, script);
+			ServerScriptingUtil.execute(portletObjects, language, script);
 
 			unsyncPrintWriter.flush();
 
@@ -871,7 +890,7 @@ public class EditServerMVCActionCommand
 		organizationMembershipPolicy.verifyPolicy();
 
 		RoleMembershipPolicy roleMembershipPolicy =
-			_roleMembershipPolicyFactory.getRoleMembershipPolicy();
+			RoleMembershipPolicyFactoryUtil.getRoleMembershipPolicy();
 
 		roleMembershipPolicy.verifyPolicy();
 
@@ -956,12 +975,6 @@ public class EditServerMVCActionCommand
 
 	@Reference
 	private RoleLocalService _roleLocalService;
-
-	@Reference
-	private RoleMembershipPolicyFactory _roleMembershipPolicyFactory;
-
-	@Reference
-	private ServerScripting _serverScripting;
 
 	@Reference
 	private SingleVMPool _singleVMPool;

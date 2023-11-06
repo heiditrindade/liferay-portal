@@ -10,9 +10,14 @@ import ClayTable from '@clayui/table';
 import './PurchasedAppsDashboardTableRow.scss';
 
 import DropDown from '@clayui/drop-down/lib/DropDown';
+import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
+import {useNavigate} from 'react-router-dom';
 
-import {PurchasedAppProps} from '../../pages/PurchasedAppsDashboardPage/PurchasedAppsDashboardPage';
+import {OrderStatus} from '../../enums/OrderStatus';
+import {orderType} from '../../enums/orderType';
+import i18n from '../../i18n';
+import {PurchasedAppProps} from '../../pages/PurchasedAppsDashboard/PurchasedAppsDashboardOutlet';
 import {showAppImage} from '../../utils/util';
 
 interface PurchasedAppsDashboardTableRowProps {
@@ -25,17 +30,31 @@ export function PurchasedAppsDashboardTableRow({
 	const {
 		name,
 		orderId,
+		orderTypeExternalReferenceCode,
+		productId,
 		project,
 		provisioning,
+		provisioningLabel,
 		purchasedBy,
 		purchasedDate,
 		thumbnail,
 		type,
 		version,
+		virtualURL,
 	} = item;
 
+	const navigate = useNavigate();
+
+	const orderStatusIsNotCompleted =
+		provisioningLabel !== OrderStatus.COMPLETED;
+
 	return (
-		<ClayTable.Row>
+		<ClayTable.Row
+			className="dashboard-table-row"
+			onClick={() => {
+				navigate(`/app/${productId}`);
+			}}
+		>
 			<ClayTable.Cell>
 				<div className="dashboard-table-row-name-container">
 					<div>
@@ -106,11 +125,12 @@ export function PurchasedAppsDashboardTableRow({
 							'dashboard-table-row-provisioning-icon',
 							{
 								'dashboard-table-row-provisioning-icon-completed':
-									provisioning === 'Completed',
+									provisioningLabel === OrderStatus.COMPLETED,
 								'dashboard-table-row-provisioning-icon-pending':
-									provisioning === 'Pending',
+									provisioningLabel === OrderStatus.PENDING,
 								'dashboard-table-row-provisioning-icon-processing':
-									provisioning === 'Processing',
+									provisioningLabel ===
+									OrderStatus.PROCESSING,
 							}
 						)}
 						symbol="circle"
@@ -122,24 +142,75 @@ export function PurchasedAppsDashboardTableRow({
 				</div>
 			</ClayTable.Cell>
 
-			<ClayTable.Cell>
+			<ClayTable.Cell onClick={(event) => event.stopPropagation()}>
 				<DropDown
 					trigger={
 						<ClayButton displayType="secondary">
-							Manage
+							{i18n.translate('manage')}
 							<ClayIcon symbol="caret-bottom" />
 						</ClayButton>
 					}
 				>
 					<DropDown.ItemList>
+						{orderTypeExternalReferenceCode === orderType.DXP && (
+							<ClayTooltipProvider>
+								<DropDown.Item
+									data-tooltip-align="left"
+									disabled={orderStatusIsNotCompleted}
+									onClick={() =>
+										navigate(
+											`/app/${productId}/order/${orderId}/create-license`
+										)
+									}
+									title={
+										orderStatusIsNotCompleted
+											? i18n.translate(
+													'the-order-must-be-completed-before-licensing-this-app.'
+											  )
+											: undefined
+									}
+								>
+									{i18n.translate('create-license-key')}
+								</DropDown.Item>
+							</ClayTooltipProvider>
+						)}
+						<DropDown.Item
+							onClick={() => {
+								navigate(`/app/${productId}/licenses`);
+							}}
+						>
+							Manage License Key(s)
+						</DropDown.Item>
+
 						<DropDown.Item
 							onClick={() => {
 								window.location.href =
 									'https://console.marketplacedemo.liferay.sh/projects';
 							}}
 						>
-							Access Console
+							{i18n.translate('access-console')}
 						</DropDown.Item>
+
+						{orderTypeExternalReferenceCode === orderType.DXP && (
+							<ClayTooltipProvider>
+								<DropDown.Item
+									data-tooltip-align="left"
+									disabled={orderStatusIsNotCompleted}
+									onClick={() => {
+										window.location.href = virtualURL;
+									}}
+									title={
+										orderStatusIsNotCompleted
+											? i18n.translate(
+													'this-order-must-be-completed-before-downloading-this-app.'
+											  )
+											: undefined
+									}
+								>
+									{i18n.translate('download-app')}
+								</DropDown.Item>
+							</ClayTooltipProvider>
+						)}
 					</DropDown.ItemList>
 				</DropDown>
 			</ClayTable.Cell>

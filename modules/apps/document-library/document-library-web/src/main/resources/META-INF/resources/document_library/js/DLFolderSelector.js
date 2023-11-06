@@ -16,6 +16,8 @@ import {
 } from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
+const TPL_ERROR_MESSAGES = `<span>{title}</span><ul class="mb-0 mt-2 pl-3">{messages}</ul>`;
+
 const DLFolderSelector = ({
 	copyActionURL,
 	dlObjectIds,
@@ -23,6 +25,7 @@ const DLFolderSelector = ({
 	portletNamespace,
 	redirect,
 	selectionModalURL,
+	size,
 	sourceRepositoryId,
 }) => {
 	const [copyButtonDisabled, setCopyButtonDisabled] = useState(true);
@@ -75,8 +78,33 @@ const DLFolderSelector = ({
 				setCopyButtonDisabled(false);
 			},
 			selectEventName: `${portletNamespace}folderSelected`,
-			title: sub(Liferay.Language.get('select')),
+			title: Liferay.Language.get('select'),
 			url: selectionModalURL,
+		});
+	};
+
+	const formatErrorMessages = (errorMessages, failedItems) => {
+		const errors = errorMessages
+			.map((message) => {
+				return `<li>${message}</li>`;
+			})
+			.join('');
+
+		return sub(TPL_ERROR_MESSAGES, {
+			messages: errors,
+			title: sub(
+				Liferay.Language.get('x-items-could-not-be-copied'),
+				failedItems
+			),
+		});
+	};
+
+	const showErrorMessage = (message) => {
+		openToast({
+			autoClose: false,
+			message,
+			title: Liferay.Language.get('error'),
+			type: 'danger',
 		});
 	};
 
@@ -85,6 +113,7 @@ const DLFolderSelector = ({
 
 		const bodyContentObject = objectToFormData({
 			[`${portletNamespace}dlObjectIds`]: dlObjectIds,
+			[`${portletNamespace}size`]: size,
 			[`${portletNamespace}sourceRepositoryId`]: sourceRepositoryId,
 			[`${portletNamespace}destinationParentFolderId`]: destinationParentFolderId,
 			[`${portletNamespace}destinationRepositoryId`]: destinationRepositoryId,
@@ -95,24 +124,41 @@ const DLFolderSelector = ({
 			method: 'POST',
 		})
 			.then((response) => response.json())
-			.then(({errorMessages}) => {
-				if (errorMessages) {
+			.then(({errorMessages, failedItems, successItems}) => {
+				if (successItems) {
 					openToast({
-						message: errorMessages[0],
-						title: Liferay.Language.get('error'),
-						type: 'danger',
+						message: sub(
+							successItems > 1
+								? Liferay.Language.get(
+										'x-items-were-copied-successfully'
+								  )
+								: Liferay.Language.get(
+										'x-item-was-copied-successfully'
+								  ),
+							successItems
+						),
 					});
+				}
+
+				if (failedItems > 10) {
+					showErrorMessage(
+						sub(
+							Liferay.Language.get('x-items-could-not-be-copied'),
+							failedItems
+						)
+					);
+				}
+				else if (errorMessages) {
+					showErrorMessage(
+						formatErrorMessages(errorMessages, failedItems)
+					);
 				}
 				else {
 					navigate(redirect);
 				}
 			})
 			.catch((error) => {
-				openToast({
-					message: error.message,
-					title: Liferay.Language.get('error'),
-					type: 'danger',
-				});
+				showErrorMessage(error.message);
 			});
 	};
 

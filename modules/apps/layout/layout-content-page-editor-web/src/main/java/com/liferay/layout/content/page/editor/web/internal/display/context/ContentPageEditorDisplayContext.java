@@ -508,6 +508,9 @@ public class ContentPageEditorDisplayContext {
 				"getPortletsURL",
 				_getResourceURL("/layout_content_page_editor/get_portlets")
 			).put(
+				"getRolesURL",
+				_getResourceURL("/layout_content_page_editor/get_roles")
+			).put(
 				"getUsers",
 				_getResourceURL("/layout_content_page_editor/get_users")
 			).put(
@@ -1529,6 +1532,8 @@ public class ContentPageEditorDisplayContext {
 						"p_l_back_url")
 				).setBackURL(
 					themeDisplay.getURLCurrent()
+				).setParameter(
+					"backURLTitle", layout.getName()
 				).setParameter(
 					"groupId", layout.getGroupId()
 				).setParameter(

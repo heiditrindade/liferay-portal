@@ -113,7 +113,6 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
@@ -737,6 +736,13 @@ public class ObjectDefinitionLocalServiceImpl
 	}
 
 	@Override
+	public ObjectDefinition getObjectDefinition(long companyId, String name)
+		throws PortalException {
+
+		return objectDefinitionPersistence.findByC_N(companyId, name);
+	}
+
+	@Override
 	public List<ObjectDefinition> getObjectDefinitions(
 		long companyId, boolean active, boolean system, int status) {
 
@@ -883,9 +889,9 @@ public class ObjectDefinitionLocalServiceImpl
 				_objectRelatedModelsProviderRegistrarHelper,
 				_objectRelationshipLocalService, _objectScopeProviderRegistry,
 				_objectViewLocalService, _organizationLocalService,
-				_persistedModelLocalServiceRegistry, _ploEntryLocalService,
-				_portal, _portletLocalService, _resourceActions, _treeFactory,
-				_userLocalService, _resourcePermissionLocalService,
+				_ploEntryLocalService, _portal, _portletLocalService,
+				_resourceActions, _treeFactory, _userLocalService,
+				_resourcePermissionLocalService,
 				_workflowStatusModelPreFilterContributor,
 				_userGroupRoleLocalService);
 
@@ -1764,6 +1770,12 @@ public class ObjectDefinitionLocalServiceImpl
 			long userId, ObjectDefinition objectDefinition)
 		throws PortalException {
 
+		if (objectDefinition.isApproved()) {
+			throw new ObjectDefinitionStatusException(
+				"The object definition is already published",
+				"the-object-definition-is-already-published");
+		}
+
 		if (!ListUtil.exists(
 				_objectFieldPersistence.findByObjectDefinitionId(
 					objectDefinition.getObjectDefinitionId()),
@@ -2456,10 +2468,6 @@ public class ObjectDefinitionLocalServiceImpl
 
 	@Reference
 	private OrganizationLocalService _organizationLocalService;
-
-	@Reference
-	private PersistedModelLocalServiceRegistry
-		_persistedModelLocalServiceRegistry;
 
 	@Reference
 	private PLOEntryLocalService _ploEntryLocalService;

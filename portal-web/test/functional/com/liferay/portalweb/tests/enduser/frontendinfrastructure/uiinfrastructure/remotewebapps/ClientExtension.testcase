@@ -1,6 +1,6 @@
 definition {
 
-	property custom.properties = "feature.flag.LPS-182184=true";
+	property custom.properties = "feature.flag.LPS-164563=true${line.separator}feature.flag.LPS-167253=true${line.separator}feature.flag.LPS-182184=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Client Extensions";
@@ -1197,8 +1197,6 @@ definition {
 	@description = "LPS-166479. Created (theme SVG extensions), the theme SVG extensions admin page lists the name and type"
 	@priority = 4
 	test ThemeSvgTypeCanBeCreated {
-		property custom.properties = "feature.flag.LPS-166479=true";
-
 		task ("Given a created Client Extension") {
 			ClientExtensionGeneral.goToRemoteAppsPortlet();
 		}
